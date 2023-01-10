@@ -10,7 +10,7 @@ This is the generator of graphs based on [BTER model](https://arxiv.org/pdf/1302
 * Then, in each group of nodes with the same label, the edges are generated according to BTER model (which is in BTER.py file) on in-degree nodes (in MyModel.py file bter_model_edges func)
 * In the end, edges on out-degrees are generated for all nodes at ones
 
-As we are aim at graphs with given four graph characteristics (label assortativity, feature assortativity, clustering coefficient, average length of shortest paths, average degree), so we tune all input hyperparameters of generator so that the generated graph is corresponds to the specified characteristics (in BTER_tuning.ipynb file)
+BTER_tuning.ipynb: As we are aim at graphs with given four graph characteristics (label assortativity, feature assortativity, clustering coefficient, average length of shortest paths, average degree), so we tune all input hyperparameters of generator so that the generated graph corresponds to the specified characteristics 
 
 ## Citing
 Please cite [our paper](http://www.mlgworkshop.org/2022/papers/MLG22_paper_5068.pdf) (and the respective papers of the methods used) if you use this code in your own work:
