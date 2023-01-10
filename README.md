@@ -1,5 +1,7 @@
 # GraphGenerator 
-This is the generator of graphs based on [BTER model](https://arxiv.org/pdf/1302.6636.pdf). The overall scheme of the generator is presented on the picture:
+This is the generator of graphs based on [BTER model](https://arxiv.org/pdf/1302.6636.pdf). The main idea is to build dataset of graphs varying 5 graph characteristics (label assortativity, feature assortativity, clustering coefficient, average length of shortest paths, average degree) for more fair and representative GNN benchmarking. 
+
+The overall scheme of the generator is presented on the picture:
 
 <p align="center">
   <img src="https://github.com/anpolol/GraphGenerator/blob/main/docs/algo.png?raw=true" width="300px"> 
@@ -10,10 +12,10 @@ This is the generator of graphs based on [BTER model](https://arxiv.org/pdf/1302
 * Then, in each group of nodes with the same label, the edges are generated according to BTER model (which is in BTER.py file) on in-degree nodes (in MyModel.py file bter_model_edges func)
 * In the end, edges on out-degrees are generated for all nodes at ones
 
-BTER_tuning.ipynb: As we are aim at graphs with given four graph characteristics (label assortativity, feature assortativity, clustering coefficient, average length of shortest paths, average degree), so we tune all input hyperparameters of generator so that the generated graph corresponds to the specified characteristics 
+BTER_tuning.ipynb: As we are aim at graphs with given four graph characteristics , so we tune all input hyperparameters of generator so that the generated graph corresponds to the specified characteristics 
 
 ## Citing
-Please cite [our paper](http://www.mlgworkshop.org/2022/papers/MLG22_paper_5068.pdf) (and the respective papers of the methods used) if you use this code in your own work:
+Please cite [our paper](http://www.mlgworkshop.org/2022/papers/MLG22_paper_5068.pdf):
 ```
 @inproceedings{mlg2022_5068,
 title={Attributed Labeled BTER-Based Generative Model for Benchmarking of Graph Neural Networks},
