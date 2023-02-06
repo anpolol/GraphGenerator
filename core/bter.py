@@ -21,12 +21,12 @@ class BTER:
         '''
         The BTER generator of graph
 
-        :param N: number of nodes in constructed graph
-        :param degs: list of degrees of nodes in gnerated graphs
-        :param etta: the hyperparameter of BTER model (default: 0.1)
-        :param ro: the hyperparameter of BTER model (default: 0.7)
-        :param d_manual: the hyperparameter of BTER model (default: 0.75)
-        :param betta: the hyperparameter of BTER model (default: 0.1)
+        :param N: (int): Number of nodes in constructed graph
+        :param degs: ([int]): List of degrees of nodes in gnerated graphs
+        :param etta: (float): The hyperparameter of BTER model (default: 0.1)
+        :param ro: (float): The hyperparameter of BTER model (default: 0.7)
+        :param d_manual: (float): The hyperparameter of BTER model (default: 0.75)
+        :param betta: (float): The hyperparameter of BTER model (default: 0.1)
         '''
 
         self.degrees = degs
@@ -41,7 +41,7 @@ class BTER:
         '''
         Build graph of networkx.Graph type
 
-        :return: Generated graph of networkx.Graph type
+        :return: (networkx.Graph): Generated graph of networkx.Graph type
         '''
         G = nx.Graph()
         G.add_nodes_from(
@@ -54,7 +54,6 @@ class BTER:
         # с единициами работаем отдельно, excesses - оставшиеся степени
         ones = len(list(filter(lambda x: x == min_deg, self.degrees)))
 
-        excesses = []
         excesses = np.zeros(ones)
         excesses[int(np.round(ones * self.d_manual) + 1) :] = min_deg * 0.1
 
@@ -156,11 +155,11 @@ class BTER:
 
     def func_excesses(self, x: float, tetta: float) -> float:
         '''
-        Improve values of exces degrees
+        Improve values of excess degrees
 
-        :param x: value of degree
-        :param tetta: the correction ratio
-        :return: improved value of degree
+        :param x: (float): Value of degree
+        :param tetta: (float): The correction ratio
+        :return: (float): Improved value of degree
         '''
 
         if x > 0:  # >=2
@@ -175,8 +174,8 @@ class BTER:
         '''
         Plot degree distributions of required degrees and of constructed Graph
 
-        :param G: Built graph
-        :param degrees_old: List of required degrees
+        :param G: (networkx.Graph): Built graph
+        :param degrees_old: ([int]): List of required degrees
         '''
         degrees_new = list(dict(G.degree()).values())
         dic = dict()
@@ -212,9 +211,9 @@ class BTER:
         '''
         Build range of integers btween two values
 
-        :param l: First int
-        :param m: Second int
-        :return: List of integers between l and m excluding m
+        :param l: (int): First int
+        :param m: (int): Second int
+        :return: ([int]): List of integers between l and m excluding m
         '''
         return range(l, m)
 
@@ -222,8 +221,8 @@ class BTER:
         '''
         Build probability for distribution of edges in BTER
 
-        :param degrees: List of degrees
-        :return: Distribution
+        :param degrees: ([int]): List of degrees
+        :return: (Tuple(float)): Distribution
         '''
         l = []
         for d in degrees:
