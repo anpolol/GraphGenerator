@@ -1,15 +1,18 @@
 import collections
+from collections import deque
+from typing import Any, Dict, List, Tuple
+
 import community as community_louvain
 import igraph as ig
 import networkx as nx
 import numpy as np
 import pandas as pd
 import torch
-from scipy.stats import rv_discrete
-from collections import deque
-from core.bter import BTER
-from typing import List, Tuple, Dict, Any
 from matplotlib import pyplot as plt
+from scipy.stats import rv_discrete
+
+from core.bter import BTER
+
 
 class Main:
     def __init__(
@@ -22,15 +25,15 @@ class Main:
         mu: float,
         sigma_init: float,
         sigma_every: float,
-        dim:float,
-        power: float=2.0,
-        sizes: List[int]=None,
-        manual: bool=False,
-        min_d: int=1,
-        d_manual: float=0.75,
-        betta: float=0.1,
+        dim: float,
+        power: float = 2.0,
+        sizes: List[int] = None,
+        manual: bool = False,
+        min_d: int = 1,
+        d_manual: float = 0.75,
+        betta: float = 0.1,
     ) -> None:
-        '''
+        """
         The generator for graphs with controllable graph characteristics based on BTER model
 
 
@@ -49,7 +52,7 @@ class Main:
         :param min_d: (int): Degree value of the node with the minimum degree
         :param d_manual: (float): The hyperparameter of BTER model (default: 0.75)
         :param betta: (float): The hyperparameter of BTER model (default: 0.1)
-        '''
+        """
         self.N = N
         self.max_d = max_d
         self.min_d = min_d
@@ -69,36 +72,36 @@ class Main:
 
     # четыре функции ниже нужны для создания степенного распределения
     def xk(self, min_d: int, max_d: int) -> List[int]:
-        '''
+        """
         Build the list of uniform steps between min_d and max_d values
 
         :param min_d: (int): Degree value of the node with the minimum degree
         :param max_d: (int): Degree value of the node with the maximum degree
         :return: ([int]): list of uniform steps between min_d and max_d values
-        '''
+        """
         return range(min_d, max_d + 1)
 
     def su(self, min_d: int, max_d: int) -> float:
-        '''
+        """
         Calculate the sum of inverse power for power degree distribution
 
         :param min_d: (int): Degree value of the node with the minimum degree
         :param max_d: (int): Degree value of the node with the maximum degree
         :return: (float): The sum
-        '''
+        """
         su = 0
         for i in self.xk(min_d, max_d):
             su += 1 / (pow(i, self.power))
         return su
 
     def pk(self, min_d: int, max_d: int) -> Tuple[float]:
-        '''
+        """
         Build a power distribution of degrees
 
         :param min_d: (int): Degree value of the node with the minimum degree
         :param max_d: (int): Degree value of the node with the maximum degree
         :return: (Tuple[float]): The power degree distribution
-        '''
+        """
         l = []
         summ = self.su(min_d, max_d)
         for x in self.xk(min_d, max_d):
@@ -106,8 +109,10 @@ class Main:
             l.append(ll)
         return tuple(l)
 
-    def making_degree_dist(self, min_d: int, max_d: int, N: int, mu: float)-> Tuple[List[int], List[int], List[int]]:
-        '''
+    def making_degree_dist(
+        self, min_d: int, max_d: int, N: int, mu: float
+    ) -> Tuple[List[int], List[int], List[int]]:
+        """
         Build three lists of degrees of nodes: overall, inside group and outside.
 
         :param min_d: (int): Degree value of the node with the minimum degree
@@ -115,7 +120,7 @@ class Main:
         :param N: (int): Number of nodes in the required graph
         :param mu: (float): required label assortativity
         :return: (([int],[int],[int])): Lists of degree of nodes, degrees of nodes inside their respective classes and degrees outside their own class
-        '''
+        """
         RandPL = rv_discrete(
             min_d, max_d, values=(self.xk(min_d, max_d), self.pk(min_d, max_d))
         )
@@ -145,14 +150,16 @@ class Main:
 
         return degrees, degrees_in, degrees_out
 
-    def making_clusters(self, L: int, degrees_in: List[int])-> Tuple[Dict[int,int], Dict[int,int], Dict[int,int]]:
-        '''
+    def making_clusters(
+        self, L: int, degrees_in: List[int]
+    ) -> Tuple[Dict[int, int], Dict[int, int], Dict[int, int]]:
+        """
         Build dictinary mappings of labels to degrees and nodes to labels
 
         :param L: (int): Number of classes
         :param degrees_in: ([int]): List of degrees inside respective group
         :return: (({int: int}, {int: int}, {int: int}))
-        '''
+        """
         # равномерный отбор
         labels_degrees = {}
         mapping = {}
@@ -176,15 +183,17 @@ class Main:
         return labels_degrees, mapping, clusters  # clusters - лебл для кжадой вершины
 
     #!!! TODO Мб подумать как это возможно сделать покороче?
-    def making_clusters_with_sizes(self, L: int, degrees_in: List[int], size_ratio: List[float]) -> Tuple[Dict[int,int], Dict[int,int], Dict[int,int]]:  # TODO
-        '''
+    def making_clusters_with_sizes(
+        self, L: int, degrees_in: List[int], size_ratio: List[float]
+    ) -> Tuple[Dict[int, int], Dict[int, int], Dict[int, int]]:  # TODO
+        """
         Make labels for nodes forcing the ratios of the sizes of classes according to size_ration list
 
         :param L: (int): Number of classes
         :param degrees_in: ([int]): List of degrees inside respective group
         :param size_ratio: ([float]): List of ratios of the sizes of classes of nodes
         :return: (({int: int}, {int: int}, {int: int}))
-        '''
+        """
         # равномерный отбор
         degrees_in = deque(degrees_in)
 
@@ -243,12 +252,12 @@ class Main:
 
         return labels_degrees, mapping, clusters
 
-    def making_graph(self) -> (nx.Graph, Dict[int:int]):
-        '''
+    def making_graph(self) -> Tuple[nx.Graph, Dict[int, int]]:
+        """
         Generate graph, main function
 
         :return: ((networkx.Graph, {int: int})): Graph if type networkx.Graph and mapping nodes to labels
-        '''
+        """
         self.degrees, degrees_in, degrees_out = self.making_degree_dist(
             self.min_d, self.max_d, self.N, self.mu
         )
@@ -294,15 +303,17 @@ class Main:
         self.generate_attributes(self.dim)
         return self.G, clusters
 
-    def bter_model_edges(self, degrees: List[int], etta: float, ro:float) -> Tuple[nx.Graph, Dict[int, int]]:
-        '''
+    def bter_model_edges(
+        self, degrees: List[int], etta: float, ro: float
+    ) -> Tuple[nx.Graph, Dict[int, int]]:
+        """
         Add edges to nodes with degrees
 
         :param degrees: ([int]): Degrees of nodes
         :param etta: (float): The hyperparameter for BTER model
         :param ro: (float): The hyperparameter for BTER model
         :return: ((networkx.Graph, {int: int})): Graph with added edges and mapping of indices into degreees
-        '''
+        """
         w = 0
         mapping_new2_to_new = {}
         degrees_new = []
@@ -325,19 +336,19 @@ class Main:
         return G_model, mapping_new2_to_new
 
     def cos(self, a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
-        '''
+        """
         Calculate cos between two vectors a and b
 
         :param a: (torch.Tensor): First tensor
         :param b: (torch.Tensor): Second tensor
         :return: torch.Tensor: One value of cos between a and b
-        '''
+        """
         return (torch.matmul(a, b)) / (torch.norm(a) * torch.norm(b))
 
-    def plot_dist(self)->None:
-        '''
+    def plot_dist(self) -> None:
+        """
         Plot expected degree disttribution and real
-        '''
+        """
         degrees_new = list(dict(self.G.degree()).values())
         dic = dict()
         for deg in sorted(self.degrees):
@@ -368,12 +379,12 @@ class Main:
         legend = ax1.legend(loc="upper center", shadow=True, fontsize="x-large")
         plt.show()
 
-    def statistics(self) -> Dict[Any,Any]:
-        '''
+    def statistics(self) -> Dict[Any, Any]:
+        """
         Calculate characteritics of the graph
 
         :return: ({Any: Any}): Dictionary of calculated graph characteristics in view 'name_of_characteristic: value_of_this_characteristic'
-        '''
+        """
         dict_of_parameters = {
             "Power": self.power,
             "N": self.N,
@@ -448,14 +459,16 @@ class Main:
 
         return dict_of_parameters
 
-    def pandas_stat(self, df: pd.DataFrame, dict_of_parameters: Dict[Any, Any]) -> pd.DataFrame:
-        '''
+    def pandas_stat(
+        self, df: pd.DataFrame, dict_of_parameters: Dict[Any, Any]
+    ) -> pd.DataFrame:
+        """
         Add statistics of generated graph characteristics to the pandas DataFrame
 
         :param df: (pd.DataFrame): Initial Data Frame to which information should be added
         :param dict_of_parameters: ({Any: Any}): Parameters to add
         :return: (pd.DataFrame): Data frame with added information
-        '''
+        """
         to_append = [
             dict_of_parameters["Power"],
             dict_of_parameters["N"],
@@ -480,11 +493,11 @@ class Main:
         return df
 
     def print_statistics(self, dict_of_parameters: Dict[Any, Any]) -> None:
-        '''
+        """
         Print characteristics of the built Graph
 
         :param dict_of_parameters: ({Any: Any}): Parameters to add
-        '''
+        """
         print("PARAMETERTS ")
         print("--------------------")
         print("Power of power law", dict_of_parameters["Power"])
@@ -509,14 +522,16 @@ class Main:
         print("Average shortest path", dict_of_parameters["Avg shortest path"])
         print("--------------------")
 
-    def manual_out_degree(self, degrees_out: List[int], clusters: Dict[int,int]) -> nx.Graph:
-        '''
+    def manual_out_degree(
+        self, degrees_out: List[int], clusters: Dict[int, int]
+    ) -> nx.Graph:
+        """
         Calculate edges between differenet classes in manual regime
 
         :param degrees_out: ([int]): List of degrees of nodes to different classes
         :param clusters: ({int: int}): Mapping of nodes into labels
         :return: (networkx.Graph): Constructed graph on out degrees of type networkx.Graph
-        '''
+        """
         G_model = nx.Graph()
         # n_edges=int(np.round(sum(degrees_out)/2))
         # RandEdge_1 = rv_discrete(0,len(degrees_out)-1,values=(self.xke(0,len(degrees_out)),self.pk_edge(degrees_out)))
@@ -562,11 +577,11 @@ class Main:
         return G_model
 
     def generate_attributes(self, m: int) -> None:
-        '''
+        """
         Add attributes to nodes in the Graph
 
         :param m: Dimension of attributes
-        '''
+        """
         partition = community_louvain.best_partition(self.G)
         len_of_every_partition = {}
         for i in partition:

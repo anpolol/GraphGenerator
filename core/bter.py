@@ -1,11 +1,11 @@
 import collections
+from typing import List, Tuple
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from networkx import erdos_renyi_graph, expected_degree_graph
 from scipy.stats import rv_discrete
-from typing import List, Tuple
 
 
 class BTER:
@@ -18,7 +18,7 @@ class BTER:
         d_manual: float = 0.75,
         betta: float = 0.1,
     ) -> None:
-        '''
+        """
         The BTER generator of graph
 
         :param N: (int): Number of nodes in constructed graph
@@ -27,7 +27,7 @@ class BTER:
         :param ro: (float): The hyperparameter of BTER model (default: 0.7)
         :param d_manual: (float): The hyperparameter of BTER model (default: 0.75)
         :param betta: (float): The hyperparameter of BTER model (default: 0.1)
-        '''
+        """
 
         self.degrees = degs
         self.N = N
@@ -38,11 +38,11 @@ class BTER:
         super().__init__()
 
     def construct(self) -> nx.Graph:
-        '''
+        """
         Build graph of networkx.Graph type
 
         :return: (networkx.Graph): Generated graph of networkx.Graph type
-        '''
+        """
         G = nx.Graph()
         G.add_nodes_from(
             list(range(len(list(filter(lambda x: x > 0, sorted(self.degrees))))))
@@ -154,13 +154,13 @@ class BTER:
         return G
 
     def func_excesses(self, x: float, tetta: float) -> float:
-        '''
+        """
         Improve values of excess degrees
 
         :param x: (float): Value of degree
         :param tetta: (float): The correction ratio
         :return: (float): Improved value of degree
-        '''
+        """
 
         if x > 0:  # >=2
             if tetta * x >= 0:
@@ -171,12 +171,12 @@ class BTER:
             return x
 
     def plot(self, G: nx.Graph, degrees_old: List[int]) -> None:
-        '''
+        """
         Plot degree distributions of required degrees and of constructed Graph
 
         :param G: (networkx.Graph): Built graph
         :param degrees_old: ([int]): List of required degrees
-        '''
+        """
         degrees_new = list(dict(G.degree()).values())
         dic = dict()
         for deg in sorted(degrees_old):
@@ -206,24 +206,23 @@ class BTER:
         legend = ax1.legend(loc="upper center", shadow=True, fontsize="x-large")
         plt.show()
 
-
-    def xke(self, l: int, m:int) -> List[int]:
-        '''
+    def xke(self, l: int, m: int) -> List[int]:
+        """
         Build range of integers btween two values
 
         :param l: (int): First int
         :param m: (int): Second int
         :return: ([int]): List of integers between l and m excluding m
-        '''
+        """
         return range(l, m)
 
     def pk_edge(self, degrees: List[int]) -> Tuple[float]:
-        '''
+        """
         Build probability for distribution of edges in BTER
 
         :param degrees: ([int]): List of degrees
         :return: (Tuple(float)): Distribution
-        '''
+        """
         l = []
         for d in degrees:
             ll = d / sum(degrees)
