@@ -13,13 +13,12 @@ from scipy.stats import rv_discrete
 
 from core.bter import BTER
 
-
 class Main:
     def __init__(
         self,
-        N: int,
+        num_nodes: int,
         max_d: int,
-        L: int,
+        num_classes: int,
         etta: float,
         ro: float,
         mu: float,
@@ -37,9 +36,9 @@ class Main:
         The generator for graphs with controllable graph characteristics based on BTER model
 
 
-        :param N: (int): Number of nodes in required graph
+        :param num_nodes: (int): Number of nodes in required graph
         :param max_d: (int): Degree value of the node with the maximum degree
-        :param L: (int): Number of classes/labels in graph
+        :param num_classes: (int): Number of classes/labels in graph
         :param etta: (float): The hyperparameter for BTER
         :param ro: (float): The hyperparameter for BTER
         :param mu: (float): Required label assortativity
@@ -53,10 +52,10 @@ class Main:
         :param d_manual: (float): The hyperparameter of BTER model (default: 0.75)
         :param betta: (float): The hyperparameter of BTER model (default: 0.1)
         """
-        self.N = N
+        self.num_nodes = num_nodes
         self.max_d = max_d
         self.min_d = min_d
-        self.L = L
+        self.num_classes = num_classes
         self.etta = etta
         self.ro = ro
         self.mu = mu
@@ -64,7 +63,7 @@ class Main:
         self.sigma_init = sigma_init
         self.sigma_every = sigma_every
         self.dim = dim
-        self.CLASSES = sizes
+        self.class_distr = sizes
         self.manual = manual
         self.d_manual = d_manual
         self.betta = betta
@@ -81,7 +80,7 @@ class Main:
         """
         return range(min_d, max_d + 1)
 
-    def su(self, min_d: int, max_d: int) -> float:
+    def sum(self, min_d: int, max_d: int) -> float:
         """
         Calculate the sum of inverse power for power degree distribution
 
@@ -89,10 +88,10 @@ class Main:
         :param max_d: (int): Degree value of the node with the maximum degree
         :return: (float): The sum
         """
-        su = 0
+        sum = 0
         for i in self.xk(min_d, max_d):
-            su += 1 / (pow(i, self.power))
-        return su
+            sum += 1 / (pow(i, self.power))
+        return sum
 
     def pk(self, min_d: int, max_d: int) -> Tuple[float]:
         """
@@ -102,29 +101,29 @@ class Main:
         :param max_d: (int): Degree value of the node with the maximum degree
         :return: (Tuple[float]): The power degree distribution
         """
-        l = []
-        summ = self.su(min_d, max_d)
+        probs = []
+        sum = self.sum(min_d, max_d)
         for x in self.xk(min_d, max_d):
-            ll = 1 / (pow(x, self.power) * summ)
-            l.append(ll)
-        return tuple(l)
+            probability = 1 / (pow(x, self.power) * sum)
+            probs.append(probability)
+        return tuple(probs)
 
     def making_degree_dist(
-        self, min_d: int, max_d: int, N: int, mu: float
+        self, min_d: int, max_d: int, num_nodes: int, mu: float
     ) -> Tuple[List[int], List[int], List[int]]:
         """
         Build three lists of degrees of nodes: overall, inside group and outside.
 
         :param min_d: (int): Degree value of the node with the minimum degree
         :param max_d: (int): Degree value of the node with the maximum degree
-        :param N: (int): Number of nodes in the required graph
+        :param num_nodes: (int): Number of nodes in the required graph
         :param mu: (float): required label assortativity
         :return: (([int],[int],[int])): Lists of degree of nodes, degrees of nodes inside their respective classes and degrees outside their own class
         """
-        RandPL = rv_discrete(
+        rand_power_law = rv_discrete(
             min_d, max_d, values=(self.xk(min_d, max_d), self.pk(min_d, max_d))
         )
-        degrees = np.sort(RandPL.rvs(size=N))
+        degrees = np.sort(rand_power_law.rvs(size=num_nodes))
         degrees_out = []
         degrees_in = (np.round(degrees * mu)).astype(np.int32)
 
@@ -137,26 +136,20 @@ class Main:
         for i in range(1, int(np.ceil(1 / mu))):
             if i in counter:
                 ones = len(list(filter(lambda x: x == i, degrees)))
-                pr = torch.bernoulli(torch.ones(ones) * mu).numpy()
-                degrees_in[k : k + ones] = pr * i
-                degrees_out[k : k + ones] = (np.ones(ones) - pr) * i
+                prob = torch.bernoulli(torch.ones(ones) * mu).numpy()
+                degrees_in[k : k + ones] = prob * i
+                degrees_out[k : k + ones] = (np.ones(ones) - prob) * i
                 k = k + ones
-        # else:
-        #   ones = len(list(filter(lambda x:x==1, degrees)))
-        #  if ones>0:
-        #     pr = torch.bernoulli(torch.ones(ones)*mu).numpy()
-        #    degrees_in[:ones] = pr
-        #   degrees_out[:ones] = np.ones(ones) - pr
 
         return degrees, degrees_in, degrees_out
 
     def making_clusters(
-        self, L: int, degrees_in: List[int]
+        self, num_classes: int, degrees_in: List[int]
     ) -> Tuple[Dict[int, int], Dict[int, int], Dict[int, int]]:
         """
         Build dictinary mappings of labels to degrees and nodes to labels
 
-        :param L: (int): Number of classes
+        :param num_classes: (int): Number of classes
         :param degrees_in: ([int]): List of degrees inside respective group
         :return: (({int: int}, {int: int}, {int: int}))
         """
@@ -168,28 +161,28 @@ class Main:
         degrees_to_cluster = sorted(degrees_in)
         nodes = np.argsort(degrees_in)
         for j, (node, degree) in enumerate(list(zip(nodes, degrees_to_cluster))):
-            if j % L not in labels_degrees:
-                labels_degrees[j % L] = []
+            if j % num_classes not in labels_degrees:
+                labels_degrees[j % num_classes] = []
 
-            labels_degrees[j % L].append(degree)
-            clusters[node] = j % L
-            ##todo
-            if j % L not in mapping:
-                mapping[j % L] = {}
-                mapping[j % L][0] = node
+            labels_degrees[j % num_classes].append(degree)
+            clusters[node] = j % num_classes
+
+            if j % num_classes not in mapping:
+                mapping[j % num_classes] = {}
+                mapping[j % num_classes][0] = node
             else:
-                mapping[j % L][max(mapping[j % L].keys()) + 1] = node
+                mapping[j % num_classes][max(mapping[j % num_classes].keys()) + 1] = node
 
         return labels_degrees, mapping, clusters  # clusters - лебл для кжадой вершины
 
     #!!! TODO Мб подумать как это возможно сделать покороче?
     def making_clusters_with_sizes(
-        self, L: int, degrees_in: List[int], size_ratio: List[float]
+        self, num_classes: int, degrees_in: List[int], size_ratio: List[float]
     ) -> Tuple[Dict[int, int], Dict[int, int], Dict[int, int]]:  # TODO
         """
         Make labels for nodes forcing the ratios of the sizes of classes according to size_ration list
 
-        :param L: (int): Number of classes
+        :param num_classes: (int): Number of classes
         :param degrees_in: ([int]): List of degrees inside respective group
         :param size_ratio: ([float]): List of ratios of the sizes of classes of nodes
         :return: (({int: int}, {int: int}, {int: int}))
@@ -203,14 +196,14 @@ class Main:
 
         size_ratio[::-1].sort()
         sizes = np.round(np.array(size_ratio) * (len(degrees_in) / sum(size_ratio)))
-        if sum(sizes) <= self.N - 1:
-            sizes[0] += self.N - sum(sizes)
+        if sum(sizes) <= self.num_nodes - 1:
+            sizes[0] += self.num_nodes - sum(sizes)
 
-        for l in range(L):
+        for l in range(num_classes):
             labels_degrees[l] = deque([])
             mapping[l] = {}
 
-        list_of_classes = deque(range(L))  # содержит номера классов
+        list_of_classes = deque(range(num_classes))  # содержит номера классов
         first_idx = (
             0  # первый СТАРЫЙ индекс. Надо для маппинга из нового индекса в старый
         )
@@ -259,33 +252,33 @@ class Main:
         :return: ((networkx.Graph, {int: int})): Graph if type networkx.Graph and mapping nodes to labels
         """
         self.degrees, degrees_in, degrees_out = self.making_degree_dist(
-            self.min_d, self.max_d, self.N, self.mu
+            self.min_d, self.max_d, self.num_nodes, self.mu
         )
 
-        if self.CLASSES is not None:
+        if self.class_distr is not None:
             labels_degrees, mapping, clusters = self.making_clusters_with_sizes(
-                self.L, degrees_in, self.CLASSES
+                self.num_classes, degrees_in, self.class_distr
             )
         else:
-            labels_degrees, mapping, clusters = self.making_clusters(self.L, degrees_in)
+            labels_degrees, mapping, clusters = self.making_clusters(self.num_classes, degrees_in)
 
-        self.G = nx.Graph()
-        for j in range(self.N):
-            self.G.add_node(j, label=clusters[j])
+        self.graph = nx.Graph()
+        for j in range(self.num_nodes):
+            self.graph.add_node(j, label=clusters[j])
 
         # сначала собираем ребра с дргуими классами
         if self.manual == True:
             G_out = self.manual_out_degree(degrees_out, clusters)
-            self.G.add_edges_from(G_out.edges())
+            self.graph.add_edges_from(G_out.edges())
         else:
             G_out, mapping_new2_to_new = self.bter_model_edges(
                 degrees_out, self.etta, self.ro
             )
             for edge in G_out.edges():
-                self.G.add_edge(
+                self.graph.add_edge(
                     mapping_new2_to_new[edge[0]], mapping_new2_to_new[edge[1]]
                 )
-            # print(degrees_out, sorted(dict(G_out.degree()).values()))
+
         # теперь внутри классов собираем ребра
         for label in labels_degrees:
             degrees_in = labels_degrees[label]
@@ -295,13 +288,13 @@ class Main:
             )
 
             for edge in G_in.edges():
-                self.G.add_edge(
+                self.graph.add_edge(
                     mapping[label][mapping_new2_to_new[edge[0]]],
                     mapping[label][mapping_new2_to_new[edge[1]]],
                 )
 
         self.generate_attributes(self.dim)
-        return self.G, clusters
+        return self.graph, clusters
 
     def bter_model_edges(
         self, degrees: List[int], etta: float, ro: float
@@ -324,14 +317,13 @@ class Main:
                 w += 1
                 degrees_new.append(deg)
         model_degrees = BTER(
-            len(degrees_new),
             degrees_new,
             etta,
             ro,
             d_manual=self.d_manual,
             betta=self.betta,
         )
-        G_model = model_degrees.construct()
+        G_model = model_degrees.build_graph()
 
         return G_model, mapping_new2_to_new
 
@@ -349,7 +341,7 @@ class Main:
         """
         Plot expected degree disttribution and real
         """
-        degrees_new = list(dict(self.G.degree()).values())
+        degrees_new = list(dict(self.graph.degree()).values())
         dic = dict()
         for deg in sorted(self.degrees):
             if deg not in dic:
@@ -376,7 +368,7 @@ class Main:
         ax1.scatter(
             x=x, y=y, marker="+", color="green", label="Actual Degree Distribution"
         )
-        legend = ax1.legend(loc="upper center", shadow=True, fontsize="x-large")
+        ax1.legend(loc="upper center", shadow=True, fontsize="x-large")
         plt.show()
 
     def statistics(self) -> Dict[Any, Any]:
@@ -387,72 +379,72 @@ class Main:
         """
         dict_of_parameters = {
             "Power": self.power,
-            "N": self.N,
-            "M": self.max_d,
-            "L": self.L,
+            "Number of nodes": self.num_nodes,
+            "Max degree": self.max_d,
+            "Number of classes": self.num_classes,
             "Eta": self.etta,
             "Ro": self.ro,
             "Mu": self.mu,
             "Disper": self.sigma_init / self.sigma_every,
-            "d": self.dim,
-            "Avg Degree": np.mean(list(dict(self.G.degree()).values())),
-            "Cluster": nx.average_clustering(self.G),
-            "Density": nx.density(self.G),
+            "Dimension": self.dim,
+            "Avg Degree": np.mean(list(dict(self.graph.degree()).values())),
+            "Cluster": nx.average_clustering(self.graph),
+            "Density": nx.density(self.graph),
             "Min degree": self.min_d,
         }
 
         feature_assort = 0
         label_assort = 0
-        for i in self.G.nodes():
+        for i in self.graph.nodes():
             s = 0
             s_l = 0
             t = 0
-            for nei in self.G.neighbors(i):
+            for neigbour in self.graph.neighbors(i):
                 t += 1
                 if (
                     self.cos(
-                        self.G.nodes()[i]["attribute"], self.G.nodes()[nei]["attribute"]
+                        self.graph.nodes()[i]["attribute"], self.graph.nodes()[neigbour]["attribute"]
                     )
                     > 0.5
                 ):
                     s += 1
-                if self.G.nodes()[nei]["label"] == self.G.nodes()[i]["label"]:
+                if self.graph.nodes()[neigbour]["label"] == self.graph.nodes()[i]["label"]:
                     s_l += 1
             if t > 0:
                 label_assort += s_l / t
                 feature_assort += s / t
 
-        dict_of_parameters["Feature Assort"] = feature_assort / len(self.G.nodes())
-        dict_of_parameters["Label Assort"] = label_assort / len(self.G.nodes())
+        dict_of_parameters["Feature Assort"] = feature_assort / len(self.graph.nodes())
+        dict_of_parameters["Label Assort"] = label_assort / len(self.graph.nodes())
         dict_of_parameters["connected components"] = nx.number_connected_components(
-            self.G
+            self.graph
         )
 
-        if nx.number_connected_components(self.G) == 1:
-            iG = ig.Graph.from_networkx(self.G)
+        if nx.number_connected_components(self.graph) == 1:
+            iG = ig.Graph.from_networkx(self.graph)
             avg_shortest_path = 0
-            for i in iG.shortest_paths():
-                for l in i:
-                    avg_shortest_path += l
-            avg_s_p = avg_shortest_path / (self.N * self.N - self.N)
+            for shortest_path in iG.shortest_paths():
+                for sp in shortest_path:
+                    avg_shortest_path += sp
+            avg_s_p = avg_shortest_path / (self.num_nodes * self.num_nodes - self.num_nodes)
         else:
-            p = dict_of_parameters["connected components"]
+            connected_components = dict_of_parameters["connected components"]
             avg_shortes_path = 0
-            for nodes in nx.connected_components(self.G):
-                g = self.G.subgraph(nodes)
+            for nodes in nx.connected_components(self.graph):
+                g = self.graph.subgraph(nodes)
                 g_ig = ig.Graph.from_networkx(g)
-                n = g.number_of_nodes()
+                num_nodes = g.number_of_nodes()
 
                 avg = 0
-                for i in g_ig.shortest_paths():
-                    for l in i:
-                        avg += l
-                if n != 1:
-                    avg_shortes_path += avg / (n * n - n)
+                for shortes_paths in g_ig.shortest_paths():
+                    for sp in shortes_paths:
+                        avg += sp
+                if num_nodes != 1:
+                    avg_shortes_path += avg / (num_nodes * num_nodes - num_nodes)
                 else:
                     avg_shortes_path = avg
 
-            avg_s_p = avg_shortes_path / p
+            avg_s_p = avg_shortes_path / connected_components
             # print(p)
 
         dict_of_parameters["Avg shortest path"] = avg_s_p
@@ -471,15 +463,15 @@ class Main:
         """
         to_append = [
             dict_of_parameters["Power"],
-            dict_of_parameters["N"],
-            dict_of_parameters["M"],
+            dict_of_parameters["Number of nodes"],
+            dict_of_parameters["Max degree"],
             dict_of_parameters["Min degree"],
-            dict_of_parameters["L"],
+            dict_of_parameters["Number of classes"],
             dict_of_parameters["Eta"],
             dict_of_parameters["Ro"],
             dict_of_parameters["Mu"],
             dict_of_parameters["Disper"],
-            dict_of_parameters["d"],
+            dict_of_parameters["Dimension"],
             dict_of_parameters["Avg Degree"],
             dict_of_parameters["Cluster"],
             dict_of_parameters["Density"],
@@ -513,7 +505,7 @@ class Main:
         print("--------------------")
         print("PROPERTIES ")
         print("--------------------")
-        print("Connected components: ", nx.number_connected_components(self.G))
+        print("Connected components: ", nx.number_connected_components(self.graph))
         print("Average degree: ", dict_of_parameters["Avg Degree"])
         print("Cluster coef: ", dict_of_parameters["Cluster"])
 
@@ -582,7 +574,7 @@ class Main:
 
         :param m: Dimension of attributes
         """
-        partition = community_louvain.best_partition(self.G)
+        partition = community_louvain.best_partition(self.graph)
         len_of_every_partition = {}
         for i in partition:
             if partition[i] not in len_of_every_partition:
@@ -598,4 +590,4 @@ class Main:
             attr = X[partition[i]] + torch.normal(
                 torch.zeros(m), torch.ones(m) * self.sigma_every
             )
-            self.G.add_node(i, attribute=attr)
+            self.graph.add_node(i, attribute=attr)
