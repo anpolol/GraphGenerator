@@ -2,7 +2,7 @@ import collections
 from collections import deque
 from typing import Any, Dict, List, Tuple
 
-import community as community_louvain
+from community import community_louvain
 import igraph as ig
 import networkx as nx
 import numpy as np
