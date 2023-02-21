@@ -2,6 +2,7 @@ import collections
 from collections import deque
 from typing import Any, Dict, List, Tuple
 
+
 import igraph as ig
 import networkx as nx
 import numpy as np
