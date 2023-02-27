@@ -23,23 +23,14 @@ GraphGenerator
      - 
 .. end-badges
 
-**GraphGenerator** is aт open-source tool for generating Graphs structure. 
-It based on `BTER <https://arxiv.org/pdf/1302.6636.pdf>`_ model and provides fair and representative graphs.
+**GraphGenerator** is an
+open-source tool for generating Graphs structure.
+It is based on `BTER <https://arxiv.org/pdf/1302.6636.pdf>`_ model and provides fair and representative graphs.
 This graphs can be useful in Deep Graph Learning problems, e.g. you can use it in GNN benchmarking.
 
 Core features
 -------------
 
-To generate graph, **GraphGenerator** is using 5 characteristics:
-
-* *Label assortativity*
-* *Feature assortativity*
-* *Clustering coefficient*
-* *Average length of the shortest paths*
-* *Average degree*
-
-Examples
---------
 .. image:: docs/algo.png
 
 The overall scheme of the generator is presented on the picture:
@@ -48,6 +39,9 @@ The overall scheme of the generator is presented on the picture:
 * These values are separated for blocks to keep the desired number of labels - ``making_clusters()`` or ``making_clusters_with_sizes()``
 * For each group of nodes with the same label, the edges are generated according to ``BTER`` model on ``in-degree nodes`` - ``bter_model_edges()``
 * At the end, ``edges on out-degrees`` are generated for all nodes at ones
+
+Examples
+--------
 
 The usage is presented in ``BTER_tuning.ipynb``: As we are aim at graphs with given four graph characteristics,
 so we tune all input hyperparameters of generator so that the generated graph corresponds
@@ -59,7 +53,7 @@ Lorem Ipsum
 
 Contacts
 --------
-- email@itmo.ru write us to email and we will answer at your questions
+- egorshikov@itmo.ru write us to email and we will answer at your questions
 
 Reference Paper
 --------
