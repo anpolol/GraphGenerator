@@ -37,13 +37,6 @@ To generate graph, **GraphGenerator** is using 5 characteristics:
 * _Average length of the shortest paths_
 * _Average degree_
 
-Installation
-------------
-*GraphGenerator* can be installed with ``pip``:
-
-.. code-block::
-     $ pip install name
-
 Examples
 --------
 <p align="center">
