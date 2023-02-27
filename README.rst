@@ -7,20 +7,11 @@ GraphGenerator
    :stub-columns: 1
 
    * - package
-     - | |pypi|
-   * - tests
-     - | |build| |coverage|
-   * - docs
-     - |docs|
+     - | |python|
    * - license
      - | |license|
-   * - stats
-     - | |downloads_stats|
    * - support
-     - | |tg|
-   * - languages
-     - | |eng| |rus|
-     - 
+     - | |email|
 .. end-badges
 
 **GraphGenerator** is an
@@ -53,7 +44,7 @@ to the specified characteristics
 
 License
 -------
-Lorem Ipsum
+This project is distributed under the 3-Clause BSD license.
 
 Contacts
 --------
@@ -71,3 +62,16 @@ Proceedings of the 17th International Workshop on Mining and Learning with Graph
     author={Polina Andreeva, Egor Shikov and Claudie Bocheninа},
     booktitle={Proceedings of the 17th International Workshop on Mining and Learning with Graphs (MLG)},
     year={2022}}
+
+.. |python| image:: https://img.shields.io/badge/python-3.10-blue
+   :alt: Supported Python Versions
+   :target: https://img.shields.io/badge/python-3.10-blue
+
+.. |license| image:: https://img.shields.io/github/license/aimclub/FEDOT
+   :alt: Supported Python Versions
+   :target: https://github.com/anpolol/GraphGenerator/blob/master/LICENSE.md
+
+.. |email| image:: https://img.shields.io/badge/email-egorshikov%40itmo.ru-blue
+    :alt: Contacts
+    :target: email-egorshikov@itmo.ru
+
