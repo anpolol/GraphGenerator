@@ -40,6 +40,10 @@ The overall scheme of the generator is presented on the picture:
 * For each group of nodes with the same label, the edges are generated according to ``BTER`` model on ``in-degree nodes`` - ``bter_model_edges()``
 * At the end, ``edges on out-degrees`` are generated for all nodes at ones
 
+Attributes are generated from normal distribution on node clusters adding noise from normal distribution:
+
+.. image:: docs/attribute_generation.png
+
 Examples
 --------
 
@@ -60,6 +64,7 @@ Reference Paper
 Polina Andreeva, Egor Shikov and Claudie Bocheninа 
 `"Attributed Labeled BTER-Based Generative Model for Benchmarking of Graph Neural Networks"  <http://www.mlgworkshop.org/2022/papers/MLG22_paper_5068.pdf>`_
 Proceedings of the 17th International Workshop on Mining and Learning with Graphs (MLG) 2022:
+
 
 @inproceedings{"mlg2022_5068",
     title={Attributed Labeled BTER-Based Generative Model for Benchmarking of Graph Neural Networks},
