@@ -30,7 +30,8 @@ This graphs can be useful in Deep Graph Learning problems, e.g. you can use it i
 Core features
 -------------
 
-To generate graph, **GraphGenerator** is using 5 characteristics: 
+To generate graph, **GraphGenerator** is using 5 characteristics:
+
 * *Label assortativity*
 * *Feature assortativity*
 * *Clustering coefficient*
