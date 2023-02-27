@@ -60,10 +60,10 @@ Reference Paper
 Polina Andreeva, Egor Shikov and Claudie Bocheninа 
 `"Attributed Labeled BTER-Based Generative Model for Benchmarking of Graph Neural Networks"  <http://www.mlgworkshop.org/2022/papers/MLG22_paper_5068.pdf>`_
 Proceedings of the 17th International Workshop on Mining and Learning with Graphs (MLG) 2022:
-
+```
 @inproceedings{"mlg2022_5068",
     title={Attributed Labeled BTER-Based Generative Model for Benchmarking of Graph Neural Networks},
     author={Polina Andreeva, Egor Shikov and Claudie Bocheninа},
     booktitle={Proceedings of the 17th International Workshop on Mining and Learning with Graphs (MLG)},
     year={2022}}
-
+```
