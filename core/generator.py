@@ -2,16 +2,17 @@ import collections
 from collections import deque
 from typing import Any, Dict, List, Tuple
 
-from community import community_louvain
 import igraph as ig
 import networkx as nx
 import numpy as np
 import pandas as pd
 import torch
+from community import community_louvain
 from matplotlib import pyplot as plt
 from scipy.stats import rv_discrete
 
 from core.bter import BTER
+
 
 class Main:
     def __init__(
@@ -69,7 +70,7 @@ class Main:
         self.betta = betta
         super().__init__()
 
-    # четыре функции ниже нужны для создания степенного распределения
+    # the functions below are needed to create a power distribution
     def xk(self, min_d: int, max_d: int) -> List[int]:
         """
         Build the list of uniform steps between min_d and max_d values
@@ -153,7 +154,7 @@ class Main:
         :param degrees_in: ([int]): List of degrees inside respective group
         :return: (({int: int}, {int: int}, {int: int}))
         """
-        # равномерный отбор
+        # uniform selection
         labels_degrees = {}
         mapping = {}
         clusters = {}
@@ -171,23 +172,25 @@ class Main:
                 mapping[j % num_classes] = {}
                 mapping[j % num_classes][0] = node
             else:
-                mapping[j % num_classes][max(mapping[j % num_classes].keys()) + 1] = node
+                mapping[j % num_classes][
+                    max(mapping[j % num_classes].keys()) + 1
+                ] = node
 
-        return labels_degrees, mapping, clusters  # clusters - лебл для кжадой вершины
+        return labels_degrees, mapping, clusters  # clusters - label for each vertex
 
-    #!!! TODO Мб подумать как это возможно сделать покороче?
     def making_clusters_with_sizes(
         self, num_classes: int, degrees_in: List[int], size_ratio: List[float]
-    ) -> Tuple[Dict[int, int], Dict[int, int], Dict[int, int]]:  # TODO
+    ) -> Tuple[Dict[int, int], Dict[int, int], Dict[int, int]]:
         """
         Make labels for nodes forcing the ratios of the sizes of classes according to size_ration list
 
         :param num_classes: (int): Number of classes
         :param degrees_in: ([int]): List of degrees inside respective group
         :param size_ratio: ([float]): List of ratios of the sizes of classes of nodes
-        :return: (({int: int}, {int: int}, {int: int}))
+        :return: ({int: int}, {int: int}, {int: int}): Tuple of three dicts: first dict contains node degrees for each
+        label, second -- mapping if index from old (in general list) to new (from local list) for each label, third --
+        labels for each new index in local lists
         """
-        # равномерный отбор
         degrees_in = deque(degrees_in)
 
         labels_degrees = {}
@@ -203,18 +206,18 @@ class Main:
             labels_degrees[l] = deque([])
             mapping[l] = {}
 
-        list_of_classes = deque(range(num_classes))  # содержит номера классов
+        list_of_classes = deque(range(num_classes))  # contains class numbers
         first_idx = (
-            0  # первый СТАРЫЙ индекс. Надо для маппинга из нового индекса в старый
+            0  # first OLD index. Needed for mapping from the new index to the old one
         )
-        last_idx = len(degrees_in) - 1  # последний СТАРЫЙ индекс
+        last_idx = len(degrees_in) - 1  # last OLD index
 
         while len(list_of_classes) != 0:
             list_classes = list(list_of_classes)
             for l in list_classes:
                 if len(labels_degrees[l]) < sizes[l] - 1:
                     mid = int(len(labels_degrees[l]) / 2)
-                    labels_degrees[l].insert(mid, degrees_in.popleft())  # добавляю
+                    labels_degrees[l].insert(mid, degrees_in.popleft())
                     labels_degrees[l].insert(mid + 1, degrees_in.pop())
 
                     clusters[first_idx] = l
@@ -260,13 +263,15 @@ class Main:
                 self.num_classes, degrees_in, self.class_distr
             )
         else:
-            labels_degrees, mapping, clusters = self.making_clusters(self.num_classes, degrees_in)
+            labels_degrees, mapping, clusters = self.making_clusters(
+                self.num_classes, degrees_in
+            )
 
         self.graph = nx.Graph()
         for j in range(self.num_nodes):
             self.graph.add_node(j, label=clusters[j])
 
-        # сначала собираем ребра с дргуими классами
+        # first collect edges with other classes
         if self.manual == True:
             G_out = self.manual_out_degree(degrees_out, clusters)
             self.graph.add_edges_from(G_out.edges())
@@ -279,7 +284,7 @@ class Main:
                     mapping_new2_to_new[edge[0]], mapping_new2_to_new[edge[1]]
                 )
 
-        # теперь внутри классов собираем ребра
+        # now inside the classes we collect edges
         for label in labels_degrees:
             degrees_in = labels_degrees[label]
 
@@ -375,7 +380,8 @@ class Main:
         """
         Calculate characteritics of the graph
 
-        :return: ({Any: Any}): Dictionary of calculated graph characteristics in view 'name_of_characteristic: value_of_this_characteristic'
+        :return: ({Any: Any}): Dictionary of calculated graph characteristics in view 'name_of_characteristic:
+        value_of_this_characteristic'
         """
         dict_of_parameters = {
             "Power": self.power,
@@ -403,12 +409,16 @@ class Main:
                 t += 1
                 if (
                     self.cos(
-                        self.graph.nodes()[i]["attribute"], self.graph.nodes()[neigbour]["attribute"]
+                        self.graph.nodes()[i]["attribute"],
+                        self.graph.nodes()[neigbour]["attribute"],
                     )
                     > 0.5
                 ):
                     s += 1
-                if self.graph.nodes()[neigbour]["label"] == self.graph.nodes()[i]["label"]:
+                if (
+                    self.graph.nodes()[neigbour]["label"]
+                    == self.graph.nodes()[i]["label"]
+                ):
                     s_l += 1
             if t > 0:
                 label_assort += s_l / t
@@ -416,7 +426,7 @@ class Main:
 
         dict_of_parameters["Feature Assort"] = feature_assort / len(self.graph.nodes())
         dict_of_parameters["Label Assort"] = label_assort / len(self.graph.nodes())
-        dict_of_parameters["connected components"] = nx.number_connected_components(
+        dict_of_parameters["Connected components"] = nx.number_connected_components(
             self.graph
         )
 
@@ -426,9 +436,11 @@ class Main:
             for shortest_path in iG.shortest_paths():
                 for sp in shortest_path:
                     avg_shortest_path += sp
-            avg_s_p = avg_shortest_path / (self.num_nodes * self.num_nodes - self.num_nodes)
+            avg_s_p = avg_shortest_path / (
+                self.num_nodes * self.num_nodes - self.num_nodes
+            )
         else:
-            connected_components = dict_of_parameters["connected components"]
+            connected_components = dict_of_parameters["Connected components"]
             avg_shortes_path = 0
             for nodes in nx.connected_components(self.graph):
                 g = self.graph.subgraph(nodes)
@@ -445,7 +457,6 @@ class Main:
                     avg_shortes_path = avg
 
             avg_s_p = avg_shortes_path / connected_components
-            # print(p)
 
         dict_of_parameters["Avg shortest path"] = avg_s_p
 
@@ -478,7 +489,7 @@ class Main:
             dict_of_parameters["Feature Assort"],
             dict_of_parameters["Label Assort"],
             dict_of_parameters["Avg shortest path"],
-            dict_of_parameters["connected components"],
+            dict_of_parameters["Connected components"],
         ]
         row_series = pd.Series(to_append, index=df.columns)
         df = df.append(row_series, ignore_index=True)
@@ -490,29 +501,36 @@ class Main:
 
         :param dict_of_parameters: ({Any: Any}): Parameters to add
         """
-        print("PARAMETERTS ")
-        print("--------------------")
-        print("Power of power law", dict_of_parameters["Power"])
-        print("Number of nodes: ", dict_of_parameters["N"])
-        print("Max degree: ", dict_of_parameters["M"])
-        print("Number of classes: ", dict_of_parameters["L"])
-        print(
-            "Etta:{}, ro:{}".format(dict_of_parameters["Eta"], dict_of_parameters["Ro"])
-        )
-        print("Ratio of neigbors with same label: ", dict_of_parameters["Mu"])
-        print("Ratio of dispertions of attributes", dict_of_parameters["Disper"])
-        print("Dimension of attributes: ", dict_of_parameters["d"])
-        print("--------------------")
-        print("PROPERTIES ")
-        print("--------------------")
-        print("Connected components: ", nx.number_connected_components(self.graph))
-        print("Average degree: ", dict_of_parameters["Avg Degree"])
-        print("Cluster coef: ", dict_of_parameters["Cluster"])
 
-        print("Feature assort: ", dict_of_parameters["Feature Assort"])
-        print("Label assort:", dict_of_parameters["Label Assort"])
-        print("Average shortest path", dict_of_parameters["Avg shortest path"])
-        print("--------------------")
+        print(
+            "PARAMETERTS: \n-------------------- \nPower of power law:{} \nNumber of nodes:{} \nMax degree:{} "
+            "\nNumber of classes:{} \nEtta:{} \nro:{} \nRatio of neigbors with same label:{} "
+            "\nRatio of dispertions of attributes:{} \nDimension of attributes:{} \n-------------------- "
+            "\n".format(
+                dict_of_parameters["Power"],
+                dict_of_parameters["Number of nodes"],
+                dict_of_parameters["Max degree"],
+                dict_of_parameters["Number of classes"],
+                dict_of_parameters["Eta"],
+                dict_of_parameters["Ro"],
+                dict_of_parameters["Mu"],
+                dict_of_parameters["Disper"],
+                dict_of_parameters["Dimension"],
+            )
+        )
+
+        print(
+            "PROPERTIES: \n-------------------- \nConnected components:{} \nAverage degree:{} \nCluster coef:{} "
+            "\nFeature assort:{} \nLabel assort:{} \nAverage shortest path:{} "
+            "\n--------------------".format(
+                nx.number_connected_components(self.graph),
+                dict_of_parameters["Avg Degree"],
+                dict_of_parameters["Cluster"],
+                dict_of_parameters["Feature Assort"],
+                dict_of_parameters["Label Assort"],
+                dict_of_parameters["Avg shortest path"],
+            )
+        )
 
     def manual_out_degree(
         self, degrees_out: List[int], clusters: Dict[int, int]
@@ -525,18 +543,6 @@ class Main:
         :return: (networkx.Graph): Constructed graph on out degrees of type networkx.Graph
         """
         G_model = nx.Graph()
-        # n_edges=int(np.round(sum(degrees_out)/2))
-        # RandEdge_1 = rv_discrete(0,len(degrees_out)-1,values=(self.xke(0,len(degrees_out)),self.pk_edge(degrees_out)))
-
-        # for e in range(n_edges):
-
-        #   edge_1=RandEdge_1.rvs()
-        #  edge_2=RandEdge_1.rvs()
-        # if clusters[edge_1] == clusters[edge_2]:
-        #    while clusters[edge_1] == clusters[edge_2]:
-        #       edge_1=RandEdge_1.rvs()
-        #      edge_2=RandEdge_1.rvs()
-        # G_model.add_edge(edge_1,edge_2)
 
         while sum(degrees_out) > 0:
             j = 0

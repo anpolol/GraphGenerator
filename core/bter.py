@@ -7,6 +7,7 @@ import numpy as np
 from networkx import erdos_renyi_graph, expected_degree_graph
 from scipy.stats import rv_discrete
 
+
 class BTER:
     def __init__(
         self,
@@ -43,20 +44,17 @@ class BTER:
         graph.add_nodes_from(
             list(range(len(list(filter(lambda x: x > 0, sorted(self.degrees))))))
         )
-        # со степенями 1 надо отдельно разбираться
 
         self.degrees = sorted(self.degrees)
         min_deg = self.degrees[0]
 
         degrees_except_min = list(filter(lambda x: x > min_deg, self.degrees))
-        # с единициами работаем отдельно, excesses - оставшиеся степени
         ones = len(list(filter(lambda x: x == min_deg, self.degrees)))
 
         excesses = np.zeros(ones)
         excesses[int(np.round(ones * self.d_manual) + 1) :] = min_deg * 0.1
 
         if len(degrees_except_min) != 0:
-            # разбиваем на общества
             communities = {}
             i = 0
             while len(degrees_except_min) > degrees_except_min[0]:
@@ -70,7 +68,6 @@ class BTER:
             if not len(degrees_except_min) == 0:
                 communities[i] = degrees_except_min
 
-            # маппинги
             mapping = {}
             k = ones
             for i in communities:
@@ -78,9 +75,6 @@ class BTER:
                 for j, node in enumerate(communities[i]):
                     mapping[i][j] = k + j
                 k += len(communities[i])
-
-            # внутри каждого коммьюнити мы делаем ребра по Erdos-Ernyi моедли
-            # а excesses это "оставшиеся степени" вершин
 
             dmax = max(self.degrees)
             excesses = list(excesses)
@@ -90,8 +84,7 @@ class BTER:
                     ro_r = self.ro * (
                         1 - self.etta * pow((np.log(comm[0] + 1) / np.log(dmax + 1)), 2)
                     )
-                    # ro_r=self.ro
-                    # print('ro_r',ro_r)
+
                     g_er = erdos_renyi_graph(len(comm), ro_r)
                     edges = []
                     for e in g_er.edges():
@@ -100,30 +93,28 @@ class BTER:
                     graph.add_edges_from(edges)
                     for deg in comm:
                         excesses.append(deg - ro_r * (len(comm) - 1))
-                    #   print('exc',deg,i,len(communities),len(communities[i]),deg - ro_r*(len(comm)-1))
 
                 else:
-                    # последнюю коммьнити с оч высокими степенями мы не трогаем
+                    # last community with the highest degrees we do not fix
                     for deg in comm:
                         excesses.append(deg)
-            # print('exc',excesses)
-        # создаем ребра для 1
-        len_negative = len(list(filter(lambda x: x <= 0, excesses)))  # ==0 <2
+        # make edges for 1 degrees
+        len_negative = len(list(filter(lambda x: x <= 0, excesses)))
         len_less_min_deg = len(list(filter(lambda x: x < min_deg + 1, excesses)))
         len_excesses = len(excesses)
-        degs = list(filter(lambda x: x > 0, excesses))  # >0 >=2
-        # print(sum(self.pk_edge(degs)),(degs))
+        degs = list(filter(lambda x: x > 0, excesses))
         if sum(degs) > 0:
-            # print(excesses,degs)
             RandNode = rv_discrete(
-                len_negative, len_excesses - 1, values=(self.xke(len_negative, len_excesses), self.pk_edge(degs))
+                len_negative,
+                len_excesses - 1,
+                values=(range(len_negative, len_excesses), self.pk_edge(degs)),
             )
 
             for i in range(len_less_min_deg):
                 for h in range(int(min_deg)):
                     graph.add_edge(i, RandNode.rvs())
 
-            # исправляем excesses с учетом присоединенных ребер
+            # fixing excesses considering attached edges
             tetta = (
                 1
                 - 2
@@ -135,15 +126,17 @@ class BTER:
                 + self.betta
             )
             excesses = list(map(lambda x: self.func_excesses(tetta, x), excesses))
-            # print(excesses)
         if sum(excesses) > 0:
-            # добавляем оставшиеся ребра CL моделью
+            # add remaining edges CL model
             num_edges = int(np.round(sum(excesses) / 2))
 
             RandEdge = rv_discrete(
                 len_negative,
                 len(excesses) - 1,
-                values=(self.xke(len_negative, len(excesses)), self.pk_edge(excesses[len_negative:])),
+                values=(
+                    range(len_negative, len(excesses)),
+                    self.pk_edge(excesses[len_negative:]),
+                ),
             )
             for e in range(num_edges):
                 edge_1 = RandEdge.rvs()
@@ -200,19 +193,8 @@ class BTER:
         x = list(dic.keys())
         y = np.array(list(dic.values())).reshape(1, -1)
         ax1.scatter(x=x, y=y, marker="+", color="green", label="Actual")
-        # ax.plot(x_s,y_s)
         ax1.legend(loc="upper center", shadow=True, fontsize="x-large")
         plt.show()
-
-    def xke(self, l: int, m: int) -> List[int]:
-        """
-        Build range of integers btween two values
-
-        :param l: (int): First int
-        :param m: (int): Second int
-        :return: ([int]): List of integers between l and m excluding m
-        """
-        return range(l, m)
 
     def pk_edge(self, degrees: List[int]) -> Tuple[float]:
         """
