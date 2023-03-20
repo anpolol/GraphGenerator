@@ -1,4 +1,5 @@
 import copy
+
 import os
 import pickle
 from typing import Any, Dict, List
@@ -44,7 +45,9 @@ class TuneParameters:
         ]
         self.number_of_trials = number_of_trials
         self.characteristics = characteristics_check
+
         self.characteristics_check = copy.deepcopy(characteristics_check)
+
         self.num_par_out = len(self.OUT_PAR_NAMES)
         self.trials = Trials()
         self.max_eval = 0
@@ -156,6 +159,7 @@ class TuneParameters:
                 nums_to_del.append(num)
             else:
                 diff = np.abs((out_pars - targets_check))
+
                 if np.all(diff < self.chars_to_array(self.limits)):
                     to_append = list(out_pars)
                     row_series = pd.Series(to_append, index=self.df_bench.columns)

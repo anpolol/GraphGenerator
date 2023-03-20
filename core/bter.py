@@ -7,6 +7,7 @@ import numpy as np
 from networkx import erdos_renyi_graph, expected_degree_graph
 from scipy.stats import rv_discrete
 
+
 class BTER:
     def __init__(
         self,
@@ -48,10 +49,8 @@ class BTER:
 
         graph.add_nodes_from(filtered_nodes)
 
-
         self.degrees = sorted(self.degrees)
         min_deg = self.degrees[0]
-
 
         degrees_except_min = []
         ones = 0
@@ -60,7 +59,6 @@ class BTER:
                 degrees_except_min.append(deg)
             elif deg == min_deg:
                 ones += 1
-
 
         excesses = np.zeros(ones)
         excesses[int(np.round(ones * self.d_manual) + 1) :] = min_deg * 0.1
@@ -80,11 +78,9 @@ class BTER:
             if deg > 0:
                 degs.append(deg)
 
-
         if sum(degs) > 0:
             graph = self._random_edges(
                 graph, degs, len_negative, len_excesses, len_less_min_deg, min_deg
-
             )
             # fixing excesses considering attached edges
             excesses = self._fix_excesses(excesses, ones, min_deg)
@@ -144,6 +140,7 @@ class BTER:
             edge_1 = RandEdge.rvs()
             edge_2 = RandEdge.rvs()
             graph.add_edge(edge_1, edge_2)
+
         return graph
 
     def _random_edges(
@@ -168,7 +165,7 @@ class BTER:
             communities[i] = degrees_except_min[: c + 1]
 
             i += 1
-            degrees_except_min = degrees_except_min[c + 1:]
+            degrees_except_min = degrees_except_min[c + 1 :]
             if len(degrees_except_min) == 0:
                 break
         if not len(degrees_except_min) == 0:
@@ -183,7 +180,6 @@ class BTER:
             k += len(communities[i])
 
         return communities, mapping
-
 
     def func_excesses(self, deg: float, tetta: float) -> float:
         """

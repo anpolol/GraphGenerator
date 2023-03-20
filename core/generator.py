@@ -14,6 +14,7 @@ from scipy.stats import rv_discrete
 
 from core.bter import BTER
 
+
 class Main:
     def __init__(
         self,
@@ -70,7 +71,6 @@ class Main:
         self.betta = betta
         super().__init__()
 
-
     def sum(self, min_d: int, max_d: int) -> float:
         """
         Calculate the sum of inverse power for power degree distribution
@@ -95,7 +95,6 @@ class Main:
         sum = self.sum(min_d, max_d)
 
         for x in range(min_d, max_d + 1):
-
             probability = 1 / (pow(x, self.power) * sum)
             probs.append(probability)
         return tuple(probs)
@@ -113,9 +112,7 @@ class Main:
         :return: (([int],[int],[int])): Lists of degree of nodes, degrees of nodes inside their respective classes and degrees outside their own class
         """
         rand_power_law = rv_discrete(
-
             min_d, max_d, values=(range(min_d, max_d + 1), self.pk(min_d, max_d))
-
         )
         degrees = np.sort(rand_power_law.rvs(size=num_nodes))
         degrees_out = []
@@ -129,14 +126,13 @@ class Main:
 
         for i in range(1, int(np.ceil(1 / mu))):
             if i in counter:
-
                 ones = 0
                 for deg in degrees:
                     if deg == i:
                         ones += 1
                 prob = torch.bernoulli(torch.ones(ones) * mu).numpy()
-                degrees_in[k: k + ones] = prob * i
-                degrees_out[k: k + ones] = (np.ones(ones) - prob) * i
+                degrees_in[k : k + ones] = prob * i
+                degrees_out[k : k + ones] = (np.ones(ones) - prob) * i
 
                 k = k + ones
 
@@ -170,19 +166,15 @@ class Main:
                 mapping[j % num_classes] = {}
                 mapping[j % num_classes][0] = node
             else:
-
                 mapping[j % num_classes][
                     max(mapping[j % num_classes].keys()) + 1
                 ] = node
-
 
         return labels_degrees, mapping, clusters  # clusters - label for each vertex
 
     def making_clusters_with_sizes(
         self, num_classes: int, degrees_in: List[int], size_ratio: List[float]
-
     ) -> Tuple[Dict[int, int], Dict[int, int], Dict[int, int]]:
-
         """
         Make labels for nodes forcing the ratios of the sizes of classes according to size_ration list
 
@@ -203,7 +195,6 @@ class Main:
         sizes = np.round(np.array(size_ratio) * (len(degrees_in) / sum(size_ratio)))
         if sum(sizes) <= self.num_nodes - 1:
             sizes[0] += self.num_nodes - sum(sizes)
-
 
         for k in range(num_classes):
             labels_degrees[k] = deque([])
@@ -267,11 +258,9 @@ class Main:
                 self.num_classes, degrees_in, self.class_distr
             )
         else:
-
             labels_degrees, mapping, clusters = self.making_clusters(
                 self.num_classes, degrees_in
             )
-
 
         self.graph = nx.Graph()
         for j in range(self.num_nodes):
@@ -289,7 +278,6 @@ class Main:
                 self.graph.add_edge(
                     mapping_new2_to_new[edge[0]], mapping_new2_to_new[edge[1]]
                 )
-
 
         # now inside the classes we collect edges
 
@@ -417,10 +405,8 @@ class Main:
                 t += 1
                 if (
                     self.cos(
-
                         self.graph.nodes()[i]["attribute"],
                         self.graph.nodes()[neigbour]["attribute"],
-
                     )
                     > 0.5
                 ):
@@ -430,7 +416,6 @@ class Main:
                     self.graph.nodes()[neigbour]["label"]
                     == self.graph.nodes()[i]["label"]
                 ):
-
                     s_l += 1
             if t > 0:
                 label_assort += s_l / t
@@ -439,10 +424,7 @@ class Main:
         dict_of_parameters["Feature Assort"] = feature_assort / len(self.graph.nodes())
         dict_of_parameters["Label Assort"] = label_assort / len(self.graph.nodes())
 
-        dict_of_parameters["Connected components"] = nx.number_connected_components(
-
-            self.graph
-        )
+        dict_of_parameters["Connected components"] = nx.number_connected_components()
 
         if nx.number_connected_components(self.graph) == 1:
             iG = ig.Graph.from_networkx(self.graph)
@@ -473,7 +455,6 @@ class Main:
                     avg_shortes_path = avg
 
             avg_s_p = avg_shortes_path / connected_components
-
 
         dict_of_parameters["Avg shortest path"] = avg_s_p
 
@@ -549,13 +530,11 @@ class Main:
             )
         )
 
-
     def draw_graph(self):
         try:
             nx.draw(self.graph)
         except ValueError:
             print("Call making_graph function before drawing graph")
-
 
     def manual_out_degree(
         self, degrees_out: List[int], clusters: Dict[int, int]
