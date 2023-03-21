@@ -1,4 +1,5 @@
 from core.generator import Main as Model
+
 import numpy as np
 
 np.random.seed(30)

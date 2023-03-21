@@ -2,6 +2,7 @@ import pickle
 from itertools import product
 from typing import Any, AnyStr, Dict
 
+
 import networkx as nx
 import numpy as np
 

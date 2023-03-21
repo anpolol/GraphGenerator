@@ -79,6 +79,7 @@ class Main:
         :param max_d: (int): Degree value of the node with the maximum degree
         :return: (float): The sum
         """
+
         sum = float(np.sum([1 / (pow(i, 2.0)) for i in range(min_d, max_d + 1)]))
 
         return sum
