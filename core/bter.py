@@ -41,108 +41,151 @@ class BTER:
         :return: (networkx.Graph): Generated graph of networkx.Graph type
         """
         graph = nx.Graph()
-        graph.add_nodes_from(
-            list(range(len(list(filter(lambda x: x > 0, sorted(self.degrees))))))
-        )
+
+        filtered_nodes = []
+        for deg in sorted(self.degrees):
+            if deg > 0 and deg not in filtered_nodes:
+                filtered_nodes.append(deg)
+
+        graph.add_nodes_from(filtered_nodes)
 
         self.degrees = sorted(self.degrees)
         min_deg = self.degrees[0]
 
-        degrees_except_min = list(filter(lambda x: x > min_deg, self.degrees))
-        ones = len(list(filter(lambda x: x == min_deg, self.degrees)))
+        degrees_except_min = []
+        ones = 0
+        for deg in self.degrees:
+            if deg > min_deg:
+                degrees_except_min.append(deg)
+            elif deg == min_deg:
+                ones += 1
 
         excesses = np.zeros(ones)
         excesses[int(np.round(ones * self.d_manual) + 1) :] = min_deg * 0.1
-
         if len(degrees_except_min) != 0:
-            communities = {}
-            i = 0
-            while len(degrees_except_min) > degrees_except_min[0]:
-                c = int(degrees_except_min[0])
-                communities[i] = degrees_except_min[: c + 1]
+            communities, mapping = self._making_communities(degrees_except_min, ones)
+        excesses, graph = self._excesses(communities, mapping, excesses, graph)
 
-                i += 1
-                degrees_except_min = degrees_except_min[c + 1 :]
-                if len(degrees_except_min) == 0:
-                    break
-            if not len(degrees_except_min) == 0:
-                communities[i] = degrees_except_min
-
-            mapping = {}
-            k = ones
-            for i in communities:
-                mapping[i] = {}
-                for j, node in enumerate(communities[i]):
-                    mapping[i][j] = k + j
-                k += len(communities[i])
-
-            dmax = max(self.degrees)
-            excesses = list(excesses)
-            for i in communities:
-                comm = communities[i]
-                if i != max(communities):
-                    ro_r = self.ro * (
-                        1 - self.etta * pow((np.log(comm[0] + 1) / np.log(dmax + 1)), 2)
-                    )
-
-                    g_er = erdos_renyi_graph(len(comm), ro_r)
-                    edges = []
-                    for e in g_er.edges():
-                        edges.append((mapping[i][e[0]], mapping[i][e[1]]))
-
-                    graph.add_edges_from(edges)
-                    for deg in comm:
-                        excesses.append(deg - ro_r * (len(comm) - 1))
-
-                else:
-                    # last community with the highest degrees we do not fix
-                    for deg in comm:
-                        excesses.append(deg)
-        # make edges for 1 degrees
-        len_negative = len(list(filter(lambda x: x <= 0, excesses)))
-        len_less_min_deg = len(list(filter(lambda x: x < min_deg + 1, excesses)))
         len_excesses = len(excesses)
-        degs = list(filter(lambda x: x > 0, excesses))
+        len_negative = 0
+        len_less_min_deg = 0
+        degs = []
+        for deg in excesses:
+            if deg <= 0:
+                len_negative += 1
+            if deg < min_deg + 1:
+                len_less_min_deg += 1
+            if deg > 0:
+                degs.append(deg)
+
         if sum(degs) > 0:
-            RandNode = rv_discrete(
-                len_negative,
-                len_excesses - 1,
-                values=(range(len_negative, len_excesses), self.pk_edge(degs)),
+            graph = self._random_edges(
+                graph, degs, len_negative, len_excesses, len_less_min_deg, min_deg
             )
-
-            for i in range(len_less_min_deg):
-                for h in range(int(min_deg)):
-                    graph.add_edge(i, RandNode.rvs())
-
             # fixing excesses considering attached edges
-            tetta = (
-                1
-                - 2
-                * (
-                    int(np.round(ones))
-                    * min_deg
-                    / (int(np.round(ones)) * min_deg + sum(excesses))
-                )
-                + self.betta
-            )
-            excesses = list(map(lambda x: self.func_excesses(tetta, x), excesses))
-        if sum(excesses) > 0:
-            # add remaining edges CL model
-            num_edges = int(np.round(sum(excesses) / 2))
+            excesses = self._fix_excesses(excesses, ones, min_deg)
 
-            RandEdge = rv_discrete(
-                len_negative,
-                len(excesses) - 1,
-                values=(
-                    range(len_negative, len(excesses)),
-                    self.pk_edge(excesses[len_negative:]),
-                ),
-            )
-            for e in range(num_edges):
-                edge_1 = RandEdge.rvs()
-                edge_2 = RandEdge.rvs()
-                graph.add_edge(edge_1, edge_2)
+        # add remaining edges CL model
+        if sum(excesses) > 0:
+            graph = self._cl_model(graph, excesses, len_negative)
         return graph
+
+    def _excesses(self, communities, mapping, excesses, graph):
+        dmax = max(self.degrees)
+        excesses = list(excesses)
+        for i in communities:
+            comm = communities[i]
+            if i != max(communities):
+                ro_r = self.ro * (
+                    1 - self.etta * pow((np.log(comm[0] + 1) / np.log(dmax + 1)), 2)
+                )
+
+                g_er = erdos_renyi_graph(len(comm), ro_r)
+                edges = []
+                for e in g_er.edges():
+                    edges.append((mapping[i][e[0]], mapping[i][e[1]]))
+
+                graph.add_edges_from(edges)
+                for deg in comm:
+                    excesses.append(deg - ro_r * (len(comm) - 1))
+
+            else:
+                # last community with the highest degrees we do not fix
+                for deg in comm:
+                    excesses.append(deg)
+        return excesses, graph
+
+    def _fix_excesses(self, excesses, ones, min_deg):
+        tetta = (
+            1
+            - 2
+            * (
+                int(np.round(ones))
+                * min_deg
+                / (int(np.round(ones)) * min_deg + sum(excesses))
+            )
+            + self.betta
+        )
+
+        excesses_new = []
+        for ex in excesses:
+            excesses_new.append(self.func_excesses(tetta, ex))
+        return excesses_new
+
+    def _cl_model(self, graph, excesses, len_negative):
+        num_edges = int(np.round(sum(excesses) / 2))
+
+        RandEdge = rv_discrete(
+            len_negative,
+            len(excesses) - 1,
+            values=(
+                range(len_negative, len(excesses)),
+                self.pk_edge(excesses[len_negative:]),
+            ),
+        )
+        for e in range(num_edges):
+            edge_1 = RandEdge.rvs()
+            edge_2 = RandEdge.rvs()
+            graph.add_edge(edge_1, edge_2)
+        return graph
+
+    def _random_edges(
+        self, graph, degs, len_negative, len_excesses, len_less_min_deg, min_deg
+    ):
+        RandNode = rv_discrete(
+            len_negative,
+            len_excesses - 1,
+            values=(range(len_negative, len_excesses), self.pk_edge(degs)),
+        )
+
+        for i in range(len_less_min_deg):
+            for h in range(int(min_deg)):
+                graph.add_edge(i, RandNode.rvs())
+        return graph
+
+    def _making_communities(self, degrees_except_min, ones):
+        communities = {}
+        i = 0
+        while len(degrees_except_min) > degrees_except_min[0]:
+            c = int(degrees_except_min[0])
+            communities[i] = degrees_except_min[: c + 1]
+
+            i += 1
+            degrees_except_min = degrees_except_min[c + 1 :]
+            if len(degrees_except_min) == 0:
+                break
+        if not len(degrees_except_min) == 0:
+            communities[i] = degrees_except_min
+
+        mapping = {}
+        k = ones
+        for i in communities:
+            mapping[i] = {}
+            for j, node in enumerate(communities[i]):
+                mapping[i][j] = k + j
+            k += len(communities[i])
+
+        return communities, mapping
 
     def func_excesses(self, deg: float, tetta: float) -> float:
         """

@@ -70,17 +70,6 @@ class Main:
         self.betta = betta
         super().__init__()
 
-    # the functions below are needed to create a power distribution
-    def xk(self, min_d: int, max_d: int) -> List[int]:
-        """
-        Build the list of uniform steps between min_d and max_d values
-
-        :param min_d: (int): Degree value of the node with the minimum degree
-        :param max_d: (int): Degree value of the node with the maximum degree
-        :return: ([int]): list of uniform steps between min_d and max_d values
-        """
-        return range(min_d, max_d + 1)
-
     def sum(self, min_d: int, max_d: int) -> float:
         """
         Calculate the sum of inverse power for power degree distribution
@@ -90,7 +79,7 @@ class Main:
         :return: (float): The sum
         """
         sum = 0
-        for i in self.xk(min_d, max_d):
+        for i in range(min_d, max_d + 1):
             sum += 1 / (pow(i, self.power))
         return sum
 
@@ -104,7 +93,7 @@ class Main:
         """
         probs = []
         sum = self.sum(min_d, max_d)
-        for x in self.xk(min_d, max_d):
+        for x in range(min_d, max_d + 1):
             probability = 1 / (pow(x, self.power) * sum)
             probs.append(probability)
         return tuple(probs)
@@ -122,7 +111,7 @@ class Main:
         :return: (([int],[int],[int])): Lists of degree of nodes, degrees of nodes inside their respective classes and degrees outside their own class
         """
         rand_power_law = rv_discrete(
-            min_d, max_d, values=(self.xk(min_d, max_d), self.pk(min_d, max_d))
+            min_d, max_d, values=(range(min_d, max_d + 1), self.pk(min_d, max_d))
         )
         degrees = np.sort(rand_power_law.rvs(size=num_nodes))
         degrees_out = []
@@ -136,7 +125,10 @@ class Main:
 
         for i in range(1, int(np.ceil(1 / mu))):
             if i in counter:
-                ones = len(list(filter(lambda x: x == i, degrees)))
+                ones = 0
+                for deg in degrees:
+                    if deg == i:
+                        ones += 1
                 prob = torch.bernoulli(torch.ones(ones) * mu).numpy()
                 degrees_in[k : k + ones] = prob * i
                 degrees_out[k : k + ones] = (np.ones(ones) - prob) * i
@@ -152,7 +144,7 @@ class Main:
 
         :param num_classes: (int): Number of classes
         :param degrees_in: ([int]): List of degrees inside respective group
-        :return: (({int: int}, {int: int}, {int: int}))
+        :return: ({int: int}, {int: int}, {int: int})
         """
         # uniform selection
         labels_degrees = {}

@@ -1,3 +1,4 @@
+import copy
 import os
 import pickle
 from typing import Any, Dict, List
@@ -43,7 +44,7 @@ class TuneParameters:
         ]
         self.number_of_trials = number_of_trials
         self.characteristics = characteristics_check
-        self.characteristics_check = characteristics_check
+        self.characteristics_check = copy.deepcopy(characteristics_check)
         self.num_par_out = len(self.OUT_PAR_NAMES)
         self.trials = Trials()
         self.max_eval = 0
@@ -112,9 +113,12 @@ class TuneParameters:
         """
         out_pars = self.chars_to_array(trials.trials[-1]["result"])
 
-        for num, targets_check in enumerate(self.characteristics_check):
-            diff = np.abs((out_pars - targets_check) / targets_check)
-            if np.all(diff < self.chars_to_array(self.limits)):
+        for num, targets_check in enumerate(self.characteristics):
+            diff = np.abs((out_pars - targets_check))
+            name = "".join(list(map(lambda x: str(x), self.targets[:-1])))
+            if np.all(diff < self.chars_to_array(self.limits)) or os.path.exists(
+                "../dataset/graph_" + str(name) + ".pickle"
+            ):
                 return True, []
         return False, []
 
@@ -151,7 +155,7 @@ class TuneParameters:
             if os.path.exists("../dataset/graph_" + str(name) + ".pickle"):
                 nums_to_del.append(num)
             else:
-                diff = np.abs((out_pars - targets_check) / targets_check)
+                diff = np.abs((out_pars - targets_check))
                 if np.all(diff < self.chars_to_array(self.limits)):
                     to_append = list(out_pars)
                     row_series = pd.Series(to_append, index=self.df_bench.columns)
@@ -165,7 +169,6 @@ class TuneParameters:
                         labels.append(lab)
                     labels = np.array(labels)
 
-                    name = "".join(list(map(lambda x: str(x), targets_check[:-1])))
                     np.save(
                         "../dataset/graph_" + str(name) + "_edgelist.npy",
                         np.array(G.edges()),
