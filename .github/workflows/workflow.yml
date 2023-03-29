@@ -2,7 +2,7 @@ steps:
 - uses: actions/checkout@master
 - uses: codecov/codecov-action@v3
   with:
-    token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+    token: ${{ secrets.ac49cfcb-43a3-4dea-b6da-ad2a95ddf72c }} # not required for public repos
     files: ./coverage1.xml,./coverage2.xml # optional
     flags: unittests # optional
     name: codecov-umbrella # optional
