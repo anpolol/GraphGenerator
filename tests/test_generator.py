@@ -5,6 +5,6 @@ def test_init_n_params():
         'N': 2,
     }
 
-    gen = Main(n=params['N'])
+    gen = Main(N=params['N'])
 
     assert gen.N == params['N']
