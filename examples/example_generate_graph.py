@@ -10,7 +10,7 @@ max_degree = 300
 mu = 0.8  # degree of connectivity of nodes with the same label, possible values are in range (0,1)
 tau1 = 2.2  # power of degree distribution possible values are in range [2.0-3.0)
 sigma_init = (
-    1.1  # dispertion of each cluster attrbutes' possible values are in range [0.8,1.31)
+    1.1  # the variance of the attributes of each cluster possible values are in the range [0.8,1.31]
 )
 dimension = 128  # dimension of attribute vector
 num_classes = 10

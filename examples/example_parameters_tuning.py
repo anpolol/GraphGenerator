@@ -7,8 +7,8 @@ import numpy as np
 from core.tuning_parameters import TuneParameters
 
 # Here we should set up graph characteristics which constructed graph should have in the following order:
-# label assortativity, feature assortativity, clustering coefficient, average length of shortest paths, average degree,
-# last value should be equal 1 as it is responsble for number of connected components
+# label assortativity, feature assortativity, clustering coefficient, average shortest-path length, average degree,
+# last value should be equal 1 as it is responsible for number of connected components
 
 label_assort = [0.9]
 feature_assort = [0.7]

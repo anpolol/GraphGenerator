@@ -495,9 +495,9 @@ class Main:
         """
 
         print(
-            "PARAMETERTS: \n-------------------- \nPower of power law:{} \nNumber of nodes:{} \nMax degree:{} "
-            "\nNumber of classes:{} \nEtta:{} \nro:{} \nRatio of neigbors with same label:{} "
-            "\nRatio of dispertions of attributes:{} \nDimension of attributes:{} \n-------------------- "
+            "PARAMETERTS: \n-------------------- \nPower of power law: {} \nNumber of nodes: {} \nMax degree: {} "
+            "\nNumber of classes: {} \nEtta: {} \nro: {} \nRatio of neigbors with same label: {} "
+            "\nRatio of variances of attributes: {} \nDimension of attributes: {} \n-------------------- "
             "\n".format(
                 dict_of_parameters["Power"],
                 dict_of_parameters["Number of nodes"],
@@ -523,6 +523,9 @@ class Main:
                 dict_of_parameters["Avg shortest path"],
             )
         )
+
+    def draw_graph(self):
+        nx.draw(self.graph)
 
     def manual_out_degree(
         self, degrees_out: List[int], clusters: Dict[int, int]
