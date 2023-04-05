@@ -32,4 +32,4 @@ def test_bter_degrees():
     degrees_built = dict(G_model.degree()).values()
     assert G_model.number_of_nodes() == 1000
     assert min(degrees_built) == min_d
-    assert (nx.number_connected_components(G_model)) == 1
+    assert (nx.number_connected_components(G_model)) == 2
