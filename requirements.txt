@@ -1,8 +1,6 @@
 hyperopt==0.2.7
 igraph==0.10.3
-
 lightgbm==3.3.4
-
 matplotlib==3.5.3
 networkx==2.6.3
 numpy==1.21.6
