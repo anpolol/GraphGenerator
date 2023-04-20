@@ -1,14 +1,7 @@
 import sys, math, random, copy, matplotlib.pyplot as plt
-import collections
-import numpy as np
-import networkx as nx
-import igraph as ig
 
 
 # Just to double check our graph stats look pretty good
-import pandas as pd
-
-
 def ComputeDegreeDistribution(network):
     degrees = []
     for vertex, neighbors in network.items():
@@ -49,26 +42,6 @@ def ComputeLabelCorrelation(network, labels):
     std1 = math.sqrt(std1)
     std2 = math.sqrt(std2)
     return cov / (std1 * std2)
-
-
-class PreferentialAttachment:
-    def __init__(self, N, k0, k):
-        self.N = N
-        self.k0 = k0  # изначальное число вершин
-        self.k = k  # сколько связей на каждом шаге добавляется
-
-    def Sample(self):
-        degree_dist = []
-        for i in range(int(self.k0)):
-            degree_dist.extend([i] * int((self.k0 - 1)))
-
-        for i in range(self.k0, self.N):
-            newvals = []
-            for j in range(self.k):
-                newvals.append(random.choice(degree_dist))
-            degree_dist.extend(newvals)
-            degree_dist.extend([i] * self.k)
-        return range(self.N), degree_dist
 
 
 # The FCL sampler we'll use for a proposal distribution
@@ -122,7 +95,7 @@ class SimpleBernoulliAR:
         sample_probs = {}
         self.ratios = {}
         self.acceptance_probs = {}
-        print("true_labels", collections.Counter(list(true_labels.values())).keys())
+
         # Determine the attribute distribution in the real network
         for vertex, neighbors in true_network.items():
             for neighbor in neighbors:
@@ -134,7 +107,6 @@ class SimpleBernoulliAR:
         total = sum(true_counts.values())
         for val, count in true_counts.items():
             true_probs[val] = count / total
-        print("true probs", collections.Counter(list(true_labels.keys())).keys())
 
         # Determine the attribute distribution in the sampled network
         for vertex, neighbors in sampled_network.items():
@@ -157,17 +129,9 @@ class SimpleBernoulliAR:
         for val, ratio in self.ratios.items():
             self.acceptance_probs[val] = ratio / max_val
 
-    def accept_or_reject(self, label1, label2, assort_in, assort_out, my):
-        if my:
-            if label1 == label2:
-                if random.random() < assort_in:
-                    return True
-            elif label1 != label2:
-                if random.random() < assort_out / 20:
-                    return True
-        else:
-            if random.random() < self.acceptance_probs[self.edge_var(label1, label2)]:
-                return True
+    def accept_or_reject(self, label1, label2):
+        if random.random() < self.acceptance_probs[self.edge_var(label1, label2)]:
+            return True
 
         return False
 
@@ -175,11 +139,8 @@ class SimpleBernoulliAR:
 # The AGM process.  Overall, most of the work is done in either the edge_acceptor or the proposing distribution
 class AGM:
     # Need to keep track of how many edges to sample
-    def __init__(self, network, assort_in, assort_between, my):
+    def __init__(self, network):
         self.ne = 0
-        self.assort_in = assort_in
-        self.assort_out = assort_between
-        self.my = my
 
         for vertex, neighbors in network.items():
             self.ne += len(neighbors)
@@ -198,7 +159,7 @@ class AGM:
             # the second actually does the acceptance/not acceptance.  This requires the edge_accept
             # to have been previously trained
             if v2 not in sample_network[v1] and edge_acceptor.accept_or_reject(
-                labels[v1], labels[v2], self.assort_in, self.assort_out, self.my
+                labels[v1], labels[v2]
             ):
                 sample_network[v1][v2] = 1
                 sample_network[v2][v1] = 1
@@ -217,7 +178,7 @@ if __name__ == "__main__":
     # corresponding labels
     labels = {}
 
-    # reading the edge file
+    # readin the edge file
     with open(data_dir + data + ".edges") as edge_file:
         for line in edge_file:
             fields = list(map(int, line.strip().split("::")))
@@ -256,6 +217,7 @@ if __name__ == "__main__":
             labels[id] = lab
 
     print("Initial Graph Correlation", ComputeLabelCorrelation(network, labels))
+    print("true degrees", ComputeDegreeDistribution(network)[1])
     fcl = FastChungLu(network)
     fcl_sample = fcl.sample_graph()
 
@@ -277,7 +239,7 @@ if __name__ == "__main__":
 
     # Now we actually do AGM!  Just plug in your proposing distribution (FCL Example Given) as well as
     # the edge_acceptor, and let it go!
-    agm = AGM(network, 0.8, 0.3, True)
+    agm = AGM(network)
     agm_sample = agm.sample_graph(fcl, sample_labels, edge_acceptor)
 
     # This should be fairly close to the initial graph's correlation
@@ -293,5 +255,6 @@ if __name__ == "__main__":
     plt.xscale("log")
     plt.yscale("log")
     plt.xlabel("Degree")
-    # plt.ylabel('CCDF')
+    plt.ylabel("CCDF")
     plt.show()
+    print(xs, "\n", ys)
