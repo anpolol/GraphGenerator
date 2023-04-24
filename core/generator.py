@@ -523,7 +523,10 @@ class Main:
         )
 
     def draw_graph(self):
-        nx.draw(self.graph)
+        try:
+            nx.draw(self.graph)
+        except ValueError:
+            print("Call making_graph function before drawing graph")
 
     def manual_out_degree(
         self, degrees_out: List[int], clusters: Dict[int, int]
