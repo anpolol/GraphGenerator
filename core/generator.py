@@ -78,9 +78,7 @@ class Main:
         :param max_d: (int): Degree value of the node with the maximum degree
         :return: (float): The sum
         """
-        sum = 0
-        for i in range(min_d, max_d + 1):
-            sum += 1 / (pow(i, self.power))
+        sum = float(np.sum([1 / (pow(i, 2.0)) for i in range(min_d, max_d + 1)]))
         return sum
 
     def pk(self, min_d: int, max_d: int) -> Tuple[float]:
@@ -575,7 +573,7 @@ class Main:
 
         :param m: Dimension of attributes
         """
-        partition = community_louvain.best_partition(self.graph)
+        partition = community_louvain.best_partition(self.graph, random_state=28)
         len_of_every_partition = {}
         for i in partition:
             if partition[i] not in len_of_every_partition:

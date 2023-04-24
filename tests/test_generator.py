@@ -1,4 +1,7 @@
 from core.generator import Main as Model
+import numpy as np
+
+np.random.seed(30)
 
 
 def test_graph_generator_statistics():
