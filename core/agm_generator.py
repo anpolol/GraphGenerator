@@ -4,7 +4,6 @@ import numpy as np
 import networkx as nx
 import igraph as ig
 
-
 # Just to double check our graph stats look pretty good
 import pandas as pd
 
