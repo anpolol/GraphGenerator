@@ -116,16 +116,9 @@ class BTER:
         return excesses, graph
 
     def _fix_excesses(self, excesses, ones, min_deg):
-        tetta = (
-            1
-            - 2
-            * (
-                int(np.round(ones))
-                * min_deg
-                / (int(np.round(ones)) * min_deg + sum(excesses))
-            )
-            + self.betta
-        )
+        pmq = int(np.round(ones)) * min_deg
+        rat = pmq / (pmq + sum(excesses))
+        tetta = 1 - 2 * rat + self.betta
 
         excesses_new = []
         for ex in excesses:
