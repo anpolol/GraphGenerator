@@ -6,6 +6,7 @@ import igraph as ig
 
 # Just to double check our graph stats look pretty good
 import pandas as pd
+from scipy.stats import beta, betabinom
 
 
 def ComputeDegreeDistribution(network):
