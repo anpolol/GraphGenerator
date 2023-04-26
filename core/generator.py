@@ -128,8 +128,8 @@ class Main:
                     if deg == i:
                         ones += 1
                 prob = torch.bernoulli(torch.ones(ones) * mu).numpy()
-                degrees_in[k : k + ones] = prob * i
-                degrees_out[k : k + ones] = (np.ones(ones) - prob) * i
+                degrees_in[k: k + ones] = prob * i
+                degrees_out[k: k + ones] = (np.ones(ones) - prob) * i
                 k = k + ones
 
         return degrees, degrees_in, degrees_out
@@ -192,9 +192,9 @@ class Main:
         if sum(sizes) <= self.num_nodes - 1:
             sizes[0] += self.num_nodes - sum(sizes)
 
-        for l in range(num_classes):
-            labels_degrees[l] = deque([])
-            mapping[l] = {}
+        for k in range(num_classes):
+            labels_degrees[k] = deque([])
+            mapping[k] = {}
 
         list_of_classes = deque(range(num_classes))  # contains class numbers
         first_idx = (

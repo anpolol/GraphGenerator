@@ -7,7 +7,9 @@ import numpy as np
 def run_example_generate_graph(args: Dict[AnyStr, Any]) -> None:
     """
     To generate graph without tuning (this would be faster), we should first set up input parameters, then call Model
-    :param args: dict[str, any]: Dict of input parameters for generator: min degree, mac dgree, mu, power for power law degree of degree distribution tau1, dispersion for attributes of cluster sigma_init, dimension of attribute vector, number of classes num_classes and two parameters of BTER eta and rho
+    :param args: dict[str, any]: Dict of input parameters for generator: min degree, mac dgree, mu, power for power
+    law degree of degree distribution tau1, dispersion for attributes of cluster sigma_init, dimension of attribute
+     vector, number of classes num_classes and two parameters of BTER eta and rho
     """
     min_degree = args["min_degree"]
     max_degree = args["max_degree"]

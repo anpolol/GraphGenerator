@@ -164,7 +164,7 @@ class BTER:
             communities[i] = degrees_except_min[: c + 1]
 
             i += 1
-            degrees_except_min = degrees_except_min[c + 1 :]
+            degrees_except_min = degrees_except_min[c + 1:]
             if len(degrees_except_min) == 0:
                 break
         if not len(degrees_except_min) == 0:

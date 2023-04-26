@@ -14,7 +14,8 @@ def run_example_tuning(args: Dict[AnyStr, Any]) -> None:
      label assortativity, feature assortativity, clustering coefficient, average shortest-path length, average degree,
      last value should be equal 1 as it is responsible for number of connected components
 
-    :param args: dict[str, any]: Dict of required graph characteristics of generated graph: label and feature assortativity, clustering coefficient, average degree and average length of shortest paths
+    :param args: dict[str, any]: Dict of required graph characteristics of generated graph: label and feature
+     assortativity, clustering coefficient, average degree and average length of shortest paths
     """
     label_assort = args["label_assort"]
     feature_assort = args["feature_assort"]
