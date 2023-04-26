@@ -1,9 +1,6 @@
 scanner:
-  diff_only: False  # The entire file touched by the PR will be scanned for errors
-  linter: flake8
+  diff_only: True
+  linter: pycodestyle
 
-flake8:
+pycodestyle:
   max-line-length: 120  # Default is 79 in PEP 8
-  ignore: []
-
-no_blank_comment: False  # Every PR will have its own pep8speaks stats
