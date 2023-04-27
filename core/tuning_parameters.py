@@ -46,6 +46,7 @@ class TuneParameters:
         self.number_of_trials = number_of_trials
         self.characteristics = characteristics_check
 
+
         self.characteristics_check = copy.deepcopy(characteristics_check)
 
         self.num_par_out = len(self.OUT_PAR_NAMES)

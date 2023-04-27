@@ -2,6 +2,7 @@ from core.generator import Main as Model
 
 import numpy as np
 
+<<<<<<< HEAD
 np.random.seed(30)
 
 
@@ -16,6 +17,19 @@ def test_graph_generator_statistics():
     eta = 0.2
     rho = 0.6
 
+=======
+def test_graph_generator_statistics():
+    min_degree = 1
+    max_degree = 500
+    mu = 0.5
+    tau1 = 2.0
+    sigma_init = 1
+    dimension = 128
+    num_classes = 5
+    eta = 0.2
+    rho = 0.6
+
+>>>>>>> 74181f83f137d0e31015323a15588a8be46f2cb7
     model = Model(
         num_nodes=1000,
         max_d=max_degree,

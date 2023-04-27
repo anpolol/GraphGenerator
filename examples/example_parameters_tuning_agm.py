@@ -17,7 +17,14 @@ avg_shortest_paths = [3]
 avg_degree = [5]
 
 target_parameters = [
+<<<<<<< HEAD
     x for x in product(feature_assort, cluster, avg_shortest_paths, avg_degree, [1])
+=======
+    x
+    for x in product(
+         feature_assort, cluster, avg_shortest_paths, avg_degree, [1]
+    )
+>>>>>>> 74181f83f137d0e31015323a15588a8be46f2cb7
 ]
 
 main = TuneParameters(number_of_trials=500, characteristics_check=target_parameters)

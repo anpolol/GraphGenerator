@@ -82,6 +82,7 @@ class Main:
 
         sum = float(np.sum([1 / (pow(i, 2.0)) for i in range(min_d, max_d + 1)]))
 
+
         return sum
 
     def pk(self, min_d: int, max_d: int) -> Tuple[float]:
@@ -197,11 +198,13 @@ class Main:
         if sum(sizes) <= self.num_nodes - 1:
             sizes[0] += self.num_nodes - sum(sizes)
 
+
         for k in range(num_classes):
             labels_degrees[k] = deque([])
             mapping[k] = {}
 
         list_of_classes = deque(range(num_classes))  # contains class numbers
+
 
         first_idx = (
             0  # first OLD index. Needed for mapping from the new index to the old one
@@ -425,7 +428,9 @@ class Main:
         dict_of_parameters["Feature Assort"] = feature_assort / len(self.graph.nodes())
         dict_of_parameters["Label Assort"] = label_assort / len(self.graph.nodes())
 
+
         dict_of_parameters["Connected components"] = nx.number_connected_components()
+
 
         if nx.number_connected_components(self.graph) == 1:
             iG = ig.Graph.from_networkx(self.graph)
@@ -439,7 +444,7 @@ class Main:
             )
         else:
             connected_components = dict_of_parameters["Connected components"]
-
+<
             avg_shortes_path = 0
             for nodes in nx.connected_components(self.graph):
                 g = self.graph.subgraph(nodes)
@@ -501,6 +506,7 @@ class Main:
         :param dict_of_parameters: ({Any: Any}): Parameters to add
         """
 
+
         print(
             "PARAMETERTS: \n-------------------- \nPower of power law: {} \nNumber of nodes: {} \nMax degree: {} "
             "\nNumber of classes: {} \nEtta: {} \nro: {} \nRatio of neigbors with same label: {} "
@@ -536,6 +542,7 @@ class Main:
             nx.draw(self.graph)
         except ValueError:
             print("Call making_graph function before drawing graph")
+
 
     def manual_out_degree(
         self, degrees_out: List[int], clusters: Dict[int, int]
