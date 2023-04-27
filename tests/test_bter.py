@@ -10,7 +10,13 @@ def test_bter_degrees():
     max_d = 500
     probs = []
 
+<<<<<<< HEAD
     sum = np.sum([1 / (pow(i, 2.0)) for i in range(min_d, max_d + 1)])
+=======
+    sum = 0
+    for i in range(min_d, max_d + 1):
+        sum += 1 / (pow(i, 2.0))
+>>>>>>> 74181f83f137d0e31015323a15588a8be46f2cb7
 
     for x in range(min_d, max_d + 1):
         probability = 1 / (pow(x, 2.0) * sum)
@@ -22,9 +28,15 @@ def test_bter_degrees():
     num_nodes = 1000
     degrees = np.sort(rand_power_law.rvs(size=num_nodes))
     model = BTER(
+<<<<<<< HEAD
         degrees=degrees,
         etta=0.05,
         ro=1,
+=======
+        degrees,
+        0.05,
+        1,
+>>>>>>> 74181f83f137d0e31015323a15588a8be46f2cb7
         d_manual=0.75,
         betta=0.1,
     )

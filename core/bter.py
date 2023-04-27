@@ -100,6 +100,7 @@ class BTER:
                     1 - self.etta * pow((np.log(comm[0] + 1) / np.log(dmax + 1)), 2)
                 )
 
+
                 g_er = erdos_renyi_graph(len(comm), ro_r)
                 edges = []
                 for e in g_er.edges():
@@ -231,8 +232,10 @@ class BTER:
         y = np.array(list(dic.values())).reshape(1, -1)
         ax1.scatter(x=x, y=y, marker="+", color="green", label="Actual")
 
+
         ax1.legend(loc="upper center", shadow=True, fontsize="x-large")
         plt.show()
+
 
     def pk_edge(self, degrees: List[int]) -> Tuple[float]:
         """

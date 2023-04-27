@@ -12,7 +12,6 @@ from core.generator import Main as Model
 from core.agm_generator import AGM, PreferentialAttachment, SBM
 import random
 
-
 class TuneParameters:
     def __init__(self, number_of_trials: int, characteristics_check: List) -> None:
         """
@@ -37,6 +36,7 @@ class TuneParameters:
             "assort_corr_in": hp.uniform("assort_corr_in", 0.1, 0.9),
             "assort_corr_between": hp.uniform("assort_corr_between", 0.1, 0.9),
         }
+
 
         self.OUT_PAR_NAMES = [
             "assortativity",
@@ -104,7 +104,9 @@ class TuneParameters:
 
         weight = np.ones(self.num_par_out)
         weight[-1] = 0.3
+
         print("loss func", (abs(((pred - target) / target)) * weight).sum())
+
         return (abs(((pred - target) / target)) * weight).sum()
 
     def early_stop(self, trials: Dict[Any, Any]) -> (bool, List):
@@ -133,6 +135,7 @@ class TuneParameters:
         :param args (Dict[str, Any]): Dict of input parameters of generator which should be considered in current trial
         :return (Dict[str, Any]): Dict of required graph characteristics and loss value for current trial
         """
+
         probs = np.diag(int(args["k"]) * [args["inside_prob"]])
         probs = np.where(probs == 0, args["inside_prob"], args["outside_prob"])
         probs = probs.tolist()
@@ -141,6 +144,7 @@ class TuneParameters:
         sample_labels_items = random.choices(
             list(range(int(args["L"]))), k=int(args["N"])
         )
+
         sample_labels = dict(zip(sample_labels_keys, sample_labels_items))
 
         # Now for the AGM steps.  First, just create the AR method using the given data, the proposing distribution,
@@ -148,6 +152,7 @@ class TuneParameters:
 
         # Now we actually do AGM!  Just plug in your proposing distribution (FCL Example Given) as well as
         # the edge_acceptor, and let it go!
+
         pa = PreferentialAttachment(int(args["N"]), int(args["k0"]), int(args["k"]))
         vertices, degree_dist = pa.Sample()
         # generator = FastChungLu(vertices, degree_dist)
@@ -172,8 +177,10 @@ class TuneParameters:
         #  dataframe = dataframe.append(to_append, ignore_index=True)
         #  dataframe.to_csv('sbm_agm_ranges.csv')
 
+
         stats = agm.statistics(agm_sample, sample_labels)
         G = agm.making_graph(agm_sample, sample_labels)
+
 
         out_pars = self.chars_to_array(stats)
         loss = self.loss_func(out_pars, self.targets)
@@ -189,6 +196,7 @@ class TuneParameters:
                     to_append = list(out_pars)
                     row_series = pd.Series(to_append, index=self.df_bench.columns)
                     self.df_bench = self.df_bench.append(row_series, ignore_index=True)
+
 
                     labels = []
                     for i, lab in G.nodes("label"):

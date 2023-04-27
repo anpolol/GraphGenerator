@@ -44,8 +44,10 @@ def ComputeLabelCorrelation(network, labels):
     return cov / (std1 * std2)
 
 
+
 # The FCL sampler we'll use for a proposal distribution
 class FastChungLu:
+
     def __init__(self, network):
         self.vertex_list = []
         self.degree_distribution = []
@@ -79,9 +81,11 @@ class FastChungLu:
         return sample_network
 
 
+
 # A simple A/R that creates the following edge features from the corresponding vertex
 # attributes.  Namely, if both are 0, if both are 1, and if both are 2.
 class SimpleBernoulliAR:
+
     # Returns 0/0 -> 0, 0/1->1, 1/0->1, 1/1 -> 2
     def edge_var(self, label1, label2):
         return label1 * label1 + label2 * label2

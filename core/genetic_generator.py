@@ -13,7 +13,9 @@ print("average degree", np.mean(list(zip(*nx.degree(G)))[1]))
 desired_cl = 0.3
 initial_population = list(map(lambda x: list(x), G.edges()))
 
+
 desired_deg = 20
+
 
 
 def fitness_func(instance, edge, idx):
@@ -25,16 +27,19 @@ def fitness_func(instance, edge, idx):
     # output2 = len(list(filter(lambda x: x[0] == edge[0] or x[1] == edge[0], population)))
     # output=(output1+output2)*0.5
 
+
     avg_degs = []
     for i in range(N):
         avg_degs.append(len(list(filter(lambda x: x[0] == i or x[1] == i, population))))
 
     output = np.mean(avg_degs)
+
     # print(list(filter(lambda x: x[0]==edges[0] or x[1]==edges[0], initial_population)))
     eps = 10e-5
     fitness = 1.0 / (np.abs(output - desired_deg) + eps)
     # print(fitness)
     return fitness
+
 
 
 fitness_function = fitness_func
@@ -56,6 +61,7 @@ crossover_type = "single_point"
 mutation_type = "random"
 mutation_percent_genes = 20
 print(initial_population)
+
 
 
 def on_generation(ga):
@@ -90,10 +96,12 @@ ga_instance = pygad.GA(
     on_generation=on_generation,
 )
 
+
 ga_instance.run()
 
 edges = ga_instance.population
 G_after = nx.from_edgelist(edges)
+
 print("population after", edges)
 print(
     "after",
@@ -106,4 +114,4 @@ print(
 
 # g = nx.from_edgelist(edges)
 # prediction = nx.average_clustering(g)
-# print("Predicted output based on the best solution : {prediction}".format(prediction=prediction))
+
