@@ -1,4 +1,4 @@
-from core.generator import Main as Model
+from core.attributed_generator import AttributedGenerator as Model
 import numpy as np
 
 np.random.seed(30)
@@ -29,7 +29,7 @@ def test_graph_generator_statistics():
         min_d=min_degree,
     )
 
-    G, _ = model.making_graph()
+    G, _ = model.generate()
     assert model.statistics()["Number of nodes"] == 1000
     assert model.statistics()["Avg shortest path"] < 3.8
     assert (

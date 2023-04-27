@@ -8,7 +8,7 @@ import pandas as pd
 from hyperopt import STATUS_OK, Trials, atpe, fmin, hp, tpe
 from numpy.typing import ArrayLike
 
-from core.generator import Main as Model
+from core.attributed_generator import AttributedGenerator as Model
 
 
 class TuneParameters:
@@ -144,7 +144,7 @@ class TuneParameters:
             min_d=int(args["min_d"]),
         )
 
-        G, _ = model.making_graph()
+        G, _ = model.generate()
 
         stats = model.statistics()
         out_pars = self.chars_to_array(stats)

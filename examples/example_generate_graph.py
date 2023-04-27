@@ -1,6 +1,6 @@
 from typing import Any, AnyStr, Dict
 
-from core.generator import Main as Model
+from core.attributed_generator import AttributedGenerator as Model
 import numpy as np
 
 
@@ -35,7 +35,7 @@ def run_example_generate_graph(args: Dict[AnyStr, Any]) -> None:
         min_d=min_degree,
     )
 
-    G, _ = model.making_graph()
+    G, _ = model.generate()
     model.print_statistics(model.statistics())
 
 

@@ -1,70 +1,67 @@
-import collections
 from typing import List, Tuple
 
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from networkx import erdos_renyi_graph, expected_degree_graph
 from scipy.stats import rv_discrete
+from core.generator_no_attr import GeneratorNoAttr
 
 
-class BTER:
+class BTER(GeneratorNoAttr):
     def __init__(
         self,
-        degrees: List[int],
-        etta: float = 0.1,
-        ro: float = 0.7,
-        d_manual: float = 0.75,
-        betta: float = 0.1,
     ) -> None:
         """
         The BTER generator of graph
-
-        :param degrees: ([int]): List of degrees of nodes in gnerated graphs
-        :param etta: (float): The hyperparameter of BTER model (default: 0.1)
-        :param ro: (float): The hyperparameter of BTER model (default: 0.7)
-        :param d_manual: (float): The hyperparameter of BTER model (default: 0.75)
-        :param betta: (float): The hyperparameter of BTER model (default: 0.1)
         """
 
-        self.degrees = degrees
-        self.etta = etta
-        self.ro = ro
-        self.d_manual = d_manual
-        self.betta = betta
         super().__init__()
 
-    def build_graph(self) -> nx.Graph:
+    def build_graph(self,params) -> nx.Graph:
         """
         Build graph of networkx.Graph type
 
+        :param params: (dict[str, any]): Dict of parameters of BTER:
+         degrees: ([int]): List of degrees of nodes in gnerated graphs
+         etta: (float): The hyperparameter of BTER model (default: 0.1)
+         ro: (float): The hyperparameter of BTER model (default: 0.7)
+         d_manual: (float): The hyperparameter of BTER model (default: 0.75)
+         betta: (float): The hyperparameter of BTER model (default: 0.1)
+
         :return: (networkx.Graph): Generated graph of networkx.Graph type
         """
+
+        degrees = params["degrees"]
+        etta = params["etta"]
+        ro = params["ro"],
+        d_manual = params["d_manual"],
+        betta = params["betta"]
+
         graph = nx.Graph()
 
         filtered_nodes = []
-        for deg in sorted(self.degrees):
+        for deg in sorted(degrees):
             if deg > 0 and deg not in filtered_nodes:
                 filtered_nodes.append(deg)
 
         graph.add_nodes_from(filtered_nodes)
 
-        self.degrees = sorted(self.degrees)
-        min_deg = self.degrees[0]
+        degrees = sorted(degrees)
+        min_deg = degrees[0]
 
         degrees_except_min = []
         ones = 0
-        for deg in self.degrees:
+        for deg in degrees:
             if deg > min_deg:
                 degrees_except_min.append(deg)
             elif deg == min_deg:
                 ones += 1
 
         excesses = np.zeros(ones)
-        excesses[int(np.round(ones * self.d_manual) + 1) :] = min_deg * 0.1
+        excesses[int(np.round(ones * d_manual) + 1) :] = min_deg * 0.1
         if len(degrees_except_min) != 0:
             communities, mapping = self._making_communities(degrees_except_min, ones)
-        excesses, graph = self._excesses(communities, mapping, excesses, graph)
+        excesses, graph = self._excesses(communities, mapping, excesses, graph, degrees, ro, etta)
 
         len_excesses = len(excesses)
         len_negative = 0
@@ -83,21 +80,21 @@ class BTER:
                 graph, degs, len_negative, len_excesses, len_less_min_deg, min_deg
             )
             # fixing excesses considering attached edges
-            excesses = self._fix_excesses(excesses, ones, min_deg)
+            excesses = self._fix_excesses(excesses, ones, min_deg, betta)
 
         # add remaining edges CL model
         if sum(excesses) > 0:
             graph = self._cl_model(graph, excesses, len_negative)
         return graph
 
-    def _excesses(self, communities, mapping, excesses, graph):
-        dmax = max(self.degrees)
+    def _excesses(self, communities, mapping, excesses, graph, degrees, ro, etta):
+        dmax = max(degrees)
         excesses = list(excesses)
         for i in communities:
             comm = communities[i]
             if i != max(communities):
-                ro_r = self.ro * (
-                    1 - self.etta * pow((np.log(comm[0] + 1) / np.log(dmax + 1)), 2)
+                ro_r = ro * (
+                    1 - etta * pow((np.log(comm[0] + 1) / np.log(dmax + 1)), 2)
                 )
 
                 g_er = erdos_renyi_graph(len(comm), ro_r)
@@ -115,14 +112,14 @@ class BTER:
                     excesses.append(deg)
         return excesses, graph
 
-    def _fix_excesses(self, excesses, ones, min_deg):
+    def _fix_excesses(self, excesses, ones, min_deg, betta):
         pmq = int(np.round(ones)) * min_deg
         rat = pmq / (pmq + sum(excesses))
-        tetta = 1 - 2 * rat + self.betta
+        tetta = 1 - 2 * rat + betta
 
         excesses_new = []
         for ex in excesses:
-            excesses_new.append(self.func_excesses(tetta, ex))
+            excesses_new.append(self._func_excesses(tetta, ex))
         return excesses_new
 
     def _cl_model(self, graph, excesses, len_negative):
@@ -180,7 +177,7 @@ class BTER:
 
         return communities, mapping
 
-    def func_excesses(self, deg: float, tetta: float) -> float:
+    def _func_excesses(self, deg: float, tetta: float) -> float:
         """
         Improve values of excess degrees
 
@@ -196,41 +193,6 @@ class BTER:
                 return 0
         else:
             return deg
-
-    def plot(self, graph: nx.Graph, degrees_old: List[int]) -> None:
-        """
-        Plot degree distributions of required degrees and of build_graphed Graph
-
-        :param graph: (networkx.Graph): Built graph
-        :param degrees_old: ([int]): List of required degrees
-        """
-        degrees_new = list(dict(graph.degree()).values())
-        dic = dict()
-        for deg in sorted(degrees_old):
-            if deg not in dic:
-                dic[deg] = 1
-            else:
-                dic[deg] += 1
-
-        fig = plt.figure(figsize=(10, 8))
-        ax1 = fig.add_subplot(111)
-
-        x = list(dic.keys())
-        y = np.array(list(dic.values())).reshape(1, -1)
-        ax1.scatter(x=x, y=y, label="Expected")
-
-        dic = dict()
-        for deg in sorted(degrees_new):
-            if deg not in dic:
-                dic[deg] = 1
-            else:
-                dic[deg] += 1
-
-        x = list(dic.keys())
-        y = np.array(list(dic.values())).reshape(1, -1)
-        ax1.scatter(x=x, y=y, marker="+", color="green", label="Actual")
-        ax1.legend(loc="upper center", shadow=True, fontsize="x-large")
-        plt.show()
 
     def pk_edge(self, degrees: List[int]) -> Tuple[float]:
         """
