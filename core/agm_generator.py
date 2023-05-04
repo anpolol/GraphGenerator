@@ -3,6 +3,7 @@ import collections
 import numpy as np
 import networkx as nx
 import igraph as ig
+from datetime import datetime
 
 # Just to double check our graph stats look pretty good
 import pandas as pd
@@ -183,7 +184,7 @@ class SBM:
 # The AGM process.  Overall, most of the work is done in either the edge_acceptor or the proposing distribution
 class AGM:
 	# Need to keep track of how many edges to sample
-	def __init__(self, degrees_dist, assort_in,assort_between,L, sample_network,alpha,beta):
+	def __init__(self, degrees_dist, assort_in,assort_between,L, sample_network,attributes,alpha,beta):
 		self.ne = 0
 		self.assort_in = assort_in
 		self.assort_out = assort_between
@@ -194,11 +195,10 @@ class AGM:
 		for deg in degrees:
 			self.ne += deg
 
-		self.acceptence_probability = self.acceptence_probability_count(sample_network,alpha,beta)
-
-	def acceptence_probability_count(self, sample_networks, alpha,beta):
+		self.acceptence_probability_count(sample_network,attributes,alpha,beta)
 
 
+	def acceptence_probability_count(self, sample_networks, attributes, alpha,beta):
 		true_counts = {}
 		true_probs = {}
 		sample_counts = {}
@@ -206,23 +206,23 @@ class AGM:
 		self.ratios = {}
 		self.acceptance_probs = {}
 
+		#samples = np.load('sample.npy')
+		#attributes={}
+		#for i,sample in enumerate(samples):
+	#		attributes[i]=sample[1:]
 
-		attributes = {}
-		for vertex in sample_networks:
-			attr = np.random.rand(16)
-			attr = attr / np.linalg.norm(attr)
-			attributes[vertex] = attr
 
 		ne = 0
 		# Determine the attribute distribution in the sampled network
 		for i in range(11):
 			sample_counts[i] = 1
 			true_counts[i] = 1
+
 		for vertex, neighbors in sample_networks.items():
 			for neighbor in neighbors:
 				ne+=1
 				attr1 = attributes[vertex]
-				attr2=attributes[neighbor]
+				attr2 = attributes[neighbor]
 				var = round(10*(np.dot(attr1,attr2)+1)/2)
 				sample_counts[var] += 1.0
 
@@ -245,8 +245,10 @@ class AGM:
 
 		# Normalize to figure out the acceptance probabilities
 		max_val = max(self.ratios.values())
+
 		for val, ratio in self.ratios.items():
 			self.acceptance_probs[val] = ratio / max_val
+		print(self.acceptance_probs)
 
 	def accept_or_reject(self, label1, label2,assort_in,assort_out):
 		if label1==label2:
@@ -265,44 +267,36 @@ class AGM:
 
 
 	# Create a new graph sample
-	def sample_graph(self, proposal_distribution, labels):
+	def sample_graph(self, proposal_distribution, attributes):
 		sample_network = {}
 		for vertex in proposal_distribution.vertex_list:
 			sample_network[vertex] = {}
 
 		sampled_ne = 0
-		attributes = {}
+
+
+
+		labels = {}
+
+		#attributes = {}
+		#samples = np.load('sample.npy')
+		#for i,sample in enumerate(samples):
+	#		attributes[i]=sample[1:]
+	#		labels[i]=sample[0]
+
 		while sampled_ne < self.ne:
 			v1, v2 = proposal_distribution.sample_edge()
-
 			# The rejection step.  The first part is just making sure the edge doesn't already exist;
 			# the second actually does the acceptance/not acceptance.  This requires the edge_accept
 			# to have been previously trained
-			if v2 not in sample_network[v1] and self.accept_or_reject(labels[v1], labels[v2], self.assort_in, self.assort_out):
+			if v2 not in sample_network[v1] and self.accept_or_reject_attributes(attributes[v1], attributes[v2]):
 				sample_network[v1][v2] = 1
 				sample_network[v2][v1] = 1
 				sampled_ne += 2
 
-				to_change = []
-				for v in [v1,v2]:
-					if v not in attributes:
-						attr = np.random.rand(16)
-						attr = attr/np.linalg.norm(attr)
-						attributes[v] = attr
-						to_change.append(v)
+		return sample_network, attributes, labels
 
-				if len(to_change)>0:
-					while not self.accept_or_reject_attributes(attributes[v1],attributes[v2]):
-						for v in to_change:
-							attr = np.random.rand(16)
-							attr = attr / np.linalg.norm(attr)
-							attributes[v] = attr
-
-
-
-		return sample_network, attributes
-
-	def statistics(self,sample_network,sample_labels,attributes):
+	def statistics(self, sample_network, sample_labels, attributes):
 		"""
         Calculate characteritics of the graph
 
@@ -357,16 +351,17 @@ class AGM:
 		feature_assort = []
 		for node in sample_network:
 			s = 0
-			for neigh in sample_network[node]:
-				a = attributes[node]
-				b = attributes[neigh]
-				cos_sim = np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
-				if cos_sim>0.7:
-					s+=1
-			feature_assort.append(s/len(sample_network[node]))
+			if len(sample_network[node])>0:
+				for neigh in sample_network[node]:
+					a = attributes[node]
+					b = attributes[neigh]
+					cos_sim = np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
+					if cos_sim>0.7:
+						s+=1
+				feature_assort.append(s/len(sample_network[node]))
 
 		dict_of_parameters["Avg shortest path"] = avg_s_p
-		dict_of_parameters['assortativity'] = ComputeLabelCorrelation(sample_network, sample_labels)
+		#dict_of_parameters['assortativity'] = ComputeLabelCorrelation(sample_network, sample_labels)
 		dict_of_parameters['Feature Assort'] = np.mean(feature_assort)
 
 		return dict_of_parameters
@@ -403,11 +398,12 @@ if __name__ == "__main__":
 	k0 = 5
 	k=5
 	b = 0
-	alpha = 5.5
-	beta = 1.5
+	alpha = 5
+	beta = 5
 	min_d = 5
 	max_d = 100
 	power = 2
+	d = datetime.now()
 	for number_of_groups in [3]:
 		for inside_prob in [0.7]:
 			for outside_prob in [0.3]:
@@ -418,9 +414,6 @@ if __name__ == "__main__":
 					for assort_corr_between in [0.2]:
 							print(b)
 							b+=1
-							sample_labels_keys = list(range(N))
-							sample_labels_items = random.choices(list(range(L)), k=N)
-							sample_labels = dict(zip(sample_labels_keys, sample_labels_items))
 
 							# Now for the AGM steps.  First, just create the AR method using the given data, the proposing distribution,
 							# and the random sample of neighbors.
@@ -433,16 +426,22 @@ if __name__ == "__main__":
 							#generator = FastChungLu(vertices, degree_dist)
 							generator = SBM(vertices,degree_dist,number_of_groups,probs,N)
 							sample_network = generator.sample_graph()
-							agm = AGM(degree_dist,assort_corr_in,assort_corr_between,L,sample_network,alpha,beta)
-							agm_sample, attributes = agm.sample_graph(generator, sample_labels)
 
+							attributes = {}
+							for vertex in sample_network:
+								attr = np.random.rand(16)
+								attr = attr / np.linalg.norm(attr)
+								attributes[vertex] = attr
 
-
-							dict_statistics = agm.statistics(agm_sample,sample_labels,attributes)
+							agm = AGM(degree_dist,assort_corr_in,assort_corr_between,L,sample_network,attributes, alpha,beta)
+							agm_sample, attributes,labels  = agm.sample_graph(generator,attributes)
+							print('end')
+							dict_statistics = agm.statistics(agm_sample,labels,attributes)
 							# This should be fairly close to the initial graph's correlation
-							print('assort', dict_statistics['Feature Assort'])
+							print('feature assort', dict_statistics['Feature Assort'])
+							print('label assort', dict_statistics['assortativity'])
 
-
+	print(datetime.now()-d)
 	#xs, ys = ComputeDegreeDistribution(agm_sample)
 	#plt.plot(xs, ys, label='AGM-FCL')
 	#plt.legend()
