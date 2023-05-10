@@ -218,21 +218,31 @@ class AGM:
 			sample_counts[i] = 1
 			true_counts[i] = 1
 
+		hist = []
 		for vertex, neighbors in sample_networks.items():
 			for neighbor in neighbors:
+				hist.append((np.dot(attributes[vertex],attributes[neighbor])+1)/2)
 				ne+=1
 				attr1 = attributes[vertex]
 				attr2 = attributes[neighbor]
 				var = round(10*(np.dot(attr1,attr2)+1)/2)
 				sample_counts[var] += 1.0
-
+		plt.hist(hist, bins=40, density=True, alpha=0.5, label='Retrieved')
+		plt.show()
 		print(sample_counts)
 		total = sum(sample_counts.values())
 		for val, count in sample_counts.items():
 			sample_probs[val] = count / total
 
 		rv = betabinom(10, alpha, beta)
+		np.random.normal(0.2, 0.05, 500 * 500)
+		true_counts = dict(collections.Counter(list(map(lambda x: int(x),(10*np.random.normal(0.2, 0.05, 500 * 500))))))
 		true_counts = dict(collections.Counter(rv.rvs(ne)))
+		for i in range(11):
+			if i not in true_counts:
+				true_counts[i]=1
+			true_counts[i] += 1
+
 		total = sum(true_counts.values())
 		for val, count in true_counts.items():
 			true_probs[val] = count / total
@@ -285,11 +295,13 @@ class AGM:
 	#		labels[i]=sample[0]
 
 		while sampled_ne < self.ne:
+			#print(sampled_ne,self.ne)
 			v1, v2 = proposal_distribution.sample_edge()
 			# The rejection step.  The first part is just making sure the edge doesn't already exist;
 			# the second actually does the acceptance/not acceptance.  This requires the edge_accept
 			# to have been previously trained
 			if v2 not in sample_network[v1] and self.accept_or_reject_attributes(attributes[v1], attributes[v2]):
+
 				sample_network[v1][v2] = 1
 				sample_network[v2][v1] = 1
 				sampled_ne += 2
@@ -338,7 +350,7 @@ class AGM:
 				num_nodes = g.number_of_nodes()
 
 				avg = 0
-				for shortes_paths in g_ig.shortest_paths():
+				for shortes_paths in g_ig.distances():
 					for sp in shortes_paths:
 						avg += sp
 				if num_nodes != 1:
@@ -396,10 +408,10 @@ if __name__ == "__main__":
 
 	#параметры механизма Preferencial attachment  - вероятно буду менять механизм через randPL
 	k0 = 5
-	k=5
+	k = 5
 	b = 0
-	alpha = 5
-	beta = 5
+	alpha = 7
+	beta = 3
 	min_d = 5
 	max_d = 100
 	power = 2
@@ -430,18 +442,25 @@ if __name__ == "__main__":
 							attributes = {}
 							for vertex in sample_network:
 								attr = np.random.rand(16)
-								attr = attr / np.linalg.norm(attr)
+								attr = attr / np.sum(np.abs(attr))
 								attributes[vertex] = attr
 
+							samples = np.load('sample_07.npy')
+							attributes={}
+							for i,sample in enumerate(samples):
+								attributes[i]=sample
+
+							d = datetime.now()
 							agm = AGM(degree_dist,assort_corr_in,assort_corr_between,L,sample_network,attributes, alpha,beta)
-							agm_sample, attributes,labels  = agm.sample_graph(generator,attributes)
+							agm_sample, attributes, labels = agm.sample_graph(generator,attributes)
 							print('end')
+							print(datetime.now() - d)
 							dict_statistics = agm.statistics(agm_sample,labels,attributes)
 							# This should be fairly close to the initial graph's correlation
 							print('feature assort', dict_statistics['Feature Assort'])
-							print('label assort', dict_statistics['assortativity'])
+#							print('label assort', dict_statistics['assortativity'])
 
-	print(datetime.now()-d)
+
 	#xs, ys = ComputeDegreeDistribution(agm_sample)
 	#plt.plot(xs, ys, label='AGM-FCL')
 	#plt.legend()
