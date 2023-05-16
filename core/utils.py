@@ -1,5 +1,8 @@
-import numpy as np
 from typing import Tuple
+
+import numpy as np
+import torch
+
 
 def sum(min_d: int, max_d: int) -> float:
     """
@@ -22,8 +25,19 @@ def pk(min_d: int, max_d: int, power: float) -> Tuple[float]:
     :return: (Tuple[float]): The power degree distribution
     """
     probs = []
-    sum = sum(min_d, max_d)
+    summation = sum(min_d, max_d)
     for x in range(min_d, max_d + 1):
-        probability = 1 / (pow(x, power) * sum)
+        probability = 1 / (pow(x, power) * summation)
         probs.append(probability)
     return tuple(probs)
+
+
+def cos(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+    """
+    Calculate cos between two vectors a and b
+
+    :param a: (torch.Tensor): First tensor
+    :param b: (torch.Tensor): Second tensor
+    :return: torch.Tensor: One value of cos between a and b
+    """
+    return (torch.matmul(a, b)) / (torch.norm(a) * torch.norm(b))

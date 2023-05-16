@@ -1,6 +1,8 @@
-from typing import Dict, Any, AnyStr
 from abc import ABC, abstractmethod
+from typing import Any, AnyStr, Dict
+
 import networkx as nx
+
 
 class GeneratorNoAttr(ABC):
     def __init__(
@@ -20,4 +22,3 @@ class GeneratorNoAttr(ABC):
         :return: (networkx.Graph): Generated graph of networkx.Graph type
         """
         raise NotImplementedError("implement run function")
-

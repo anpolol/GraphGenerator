@@ -28,9 +28,7 @@ def test_bter_degrees():
     params["d_manual"] = 0.75
     params["betta"] = 0.1
 
-    model = BTER(
-        params
-    )
+    model = BTER(params)
     G_model = model.build_graph()
     degrees_built = dict(G_model.degree()).values()
     assert G_model.number_of_nodes() == 1000

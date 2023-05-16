@@ -1,5 +1,6 @@
-from core.attributed_generator import AttributedGenerator as Model
 import numpy as np
+
+from core.attributed_generator import AttributedGenerator as Model
 
 np.random.seed(30)
 

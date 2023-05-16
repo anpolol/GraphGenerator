@@ -2,9 +2,11 @@ from typing import List, Tuple
 
 import networkx as nx
 import numpy as np
-from networkx import erdos_renyi_graph, expected_degree_graph
+from networkx.generators import erdos_renyi_graph
 from scipy.stats import rv_discrete
+
 from core.generator_no_attr import GeneratorNoAttr
+from core.graph import Graph
 
 
 class BTER(GeneratorNoAttr):
@@ -17,7 +19,7 @@ class BTER(GeneratorNoAttr):
 
         super().__init__()
 
-    def build_graph(self,params) -> nx.Graph:
+    def build_subgraph(self, params) -> nx.Graph:
         """
         Build graph of networkx.Graph type
 
@@ -32,12 +34,12 @@ class BTER(GeneratorNoAttr):
         """
 
         degrees = params["degrees"]
-        etta = params["etta"]
-        ro = params["ro"],
-        d_manual = params["d_manual"],
+        etta = params["eta"]
+        ro = params["rho"]
+        d_manual = params["d_manual"]
         betta = params["betta"]
 
-        graph = nx.Graph()
+        graph = Graph()
 
         filtered_nodes = []
         for deg in sorted(degrees):
@@ -58,10 +60,14 @@ class BTER(GeneratorNoAttr):
                 ones += 1
 
         excesses = np.zeros(ones)
+
         excesses[int(np.round(ones * d_manual) + 1) :] = min_deg * 0.1
+
         if len(degrees_except_min) != 0:
             communities, mapping = self._making_communities(degrees_except_min, ones)
-        excesses, graph = self._excesses(communities, mapping, excesses, graph, degrees, ro, etta)
+        excesses, graph = self._excesses(
+            communities, mapping, excesses, graph, degrees, ro, etta
+        )
 
         len_excesses = len(excesses)
         len_negative = 0
@@ -161,7 +167,7 @@ class BTER(GeneratorNoAttr):
             communities[i] = degrees_except_min[: c + 1]
 
             i += 1
-            degrees_except_min = degrees_except_min[c + 1:]
+            degrees_except_min = degrees_except_min[c + 1 :]
             if len(degrees_except_min) == 0:
                 break
         if not len(degrees_except_min) == 0:

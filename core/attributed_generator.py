@@ -1,6 +1,6 @@
 import collections
 from collections import deque
-from typing import Any, Dict, List, Tuple, AnyStr
+from typing import Any, AnyStr, Dict, List, Tuple
 
 import igraph as ig
 import networkx as nx
@@ -10,8 +10,10 @@ import torch
 from community import community_louvain
 from matplotlib import pyplot as plt
 from scipy.stats import rv_discrete
-from core.utils import sum,pk
+
 from core.bter import BTER
+from core.graph import Graph
+from core.utils import pk, sum
 
 
 class AttributedGenerator:
@@ -23,7 +25,6 @@ class AttributedGenerator:
         """
 
         super().__init__()
-
 
     def making_degree_dist(
         self, min_d: int, max_d: int, num_nodes: int, mu: float, power: float
@@ -58,8 +59,8 @@ class AttributedGenerator:
                     if deg == i:
                         ones += 1
                 prob = torch.bernoulli(torch.ones(ones) * mu).numpy()
-                degrees_in[k: k + ones] = prob * i
-                degrees_out[k: k + ones] = (np.ones(ones) - prob) * i
+                degrees_in[k : k + ones] = prob * i
+                degrees_out[k : k + ones] = (np.ones(ones) - prob) * i
                 k = k + ones
 
         return degrees, degrees_in, degrees_out
@@ -99,7 +100,11 @@ class AttributedGenerator:
         return labels_degrees, mapping, clusters  # clusters - label for each vertex
 
     def making_clusters_with_sizes(
-        self, num_nodes: int, num_classes: int, degrees_in: List[int], size_ratio: List[float]
+        self,
+        num_nodes: int,
+        num_classes: int,
+        degrees_in: List[int],
+        size_ratio: List[float],
     ) -> Tuple[Dict[int, int], Dict[int, int], Dict[int, int]]:
         """
         Make labels for nodes forcing the ratios of the sizes of classes according to size_ration list
@@ -194,21 +199,21 @@ class AttributedGenerator:
 
         :return: ((networkx.Graph, {int: int})): Graph if type networkx.Graph and mapping nodes to labels
         """
-        num_nodes = params['num_nodes']
-        max_d = params['max_d']
-        min_d = params['min_d']
-        num_classes = params['num_classes']
-        etta = params['etta']
-        ro = params['ro']
-        mu = params['mu']
-        power = params['power']
-        sigma_init = params['sigma_init']
-        sigma_every = params['sigma_every']
-        dim = params['dim']
-        class_distr = params['sizes']
-        manual = params['manual']
-        d_manual = params['d_manual']
-        betta = params['betta']
+        num_nodes = params["num_nodes"]
+        max_d = params["max_d"]
+        min_d = params["min_d"]
+        num_classes = params["num_classes"]
+        etta = params["eta"]
+        ro = params["rho"]
+        mu = params["mu"]
+        power = params["power"]
+        sigma_init = params["sigma_init"]
+        sigma_every = params["sigma_every"]
+        dim = params["dim"]
+        class_distr = params["sizes"]
+        manual = params["manual"]
+        d_manual = params["d_manual"]
+        betta = params["betta"]
 
         degrees, degrees_in, degrees_out = self.making_degree_dist(
             min_d, max_d, num_nodes, mu, power
@@ -223,7 +228,7 @@ class AttributedGenerator:
                 num_classes, degrees_in
             )
 
-        graph = nx.Graph()
+        graph = Graph()
         for j in range(num_nodes):
             graph.add_node(j, label=clusters[j])
 
@@ -233,7 +238,7 @@ class AttributedGenerator:
             graph.add_edges_from(G_out.edges())
         else:
             G_out, mapping_new2_to_new = self.bter_model_edges(
-                degrees_out, etta, ro,d_manual,betta
+                degrees_out, etta, ro, d_manual, betta
             )
             for edge in G_out.edges():
                 graph.add_edge(
@@ -245,7 +250,7 @@ class AttributedGenerator:
             degrees_in = labels_degrees[label]
 
             G_in, mapping_new2_to_new = self.bter_model_edges(
-                degrees_in, etta, ro,d_manual,betta
+                degrees_in, etta, ro, d_manual, betta
             )
 
             for edge in G_in.edges():
@@ -254,7 +259,7 @@ class AttributedGenerator:
                     mapping[label][mapping_new2_to_new[edge[1]]],
                 )
 
-        graph = self.generate_attributes(graph, sigma_init, sigma_every,dim)
+        graph = self.generate_attributes(graph, sigma_init, sigma_every, dim)
         return graph, clusters
 
     def bter_model_edges(
@@ -279,16 +284,15 @@ class AttributedGenerator:
                 mapping_new2_to_new[w] = e
                 w += 1
                 degrees_new.append(deg)
-        params_for_noattrgeerator = dict()
-        params_for_noattrgeerator["degrees"] = degrees_new
-        params_for_noattrgeerator["etta"] = etta
-        params_for_noattrgeerator["ro"] = ro
-        params_for_noattrgeerator["d_manual"] = d_manual
-        params_for_noattrgeerator["betta"] = betta
-        model_degrees = BTER(
-            params_for_noattrgeerator
-        )
-        G_model = model_degrees.build_subgraph()
+        params_for_noattr_generator = dict()
+        params_for_noattr_generator["degrees"] = degrees_new
+        params_for_noattr_generator["eta"] = etta
+        params_for_noattr_generator["rho"] = ro
+        params_for_noattr_generator["d_manual"] = d_manual
+
+        params_for_noattr_generator["betta"] = betta
+        model_degrees = BTER()
+        G_model = model_degrees.build_subgraph(params_for_noattr_generator)
 
         return G_model, mapping_new2_to_new
 
@@ -302,7 +306,7 @@ class AttributedGenerator:
         :param clusters: ({int: int}): Mapping of nodes into labels
         :return: (networkx.Graph): Constructed graph on out degrees of type networkx.Graph
         """
-        G_model = nx.Graph()
+        G_model = Graph()
 
         while sum(degrees_out) > 0:
             j = 0
@@ -334,7 +338,9 @@ class AttributedGenerator:
 
         return G_model
 
-    def generate_attributes(self, graph: nx.Graph, sigma_init: float, sigma_every: float, m: int) -> None:
+    def generate_attributes(
+        self, graph: nx.Graph, sigma_init: float, sigma_every: float, m: int
+    ) -> None:
         """
         Add attributes to nodes in the Graph
 
@@ -345,7 +351,7 @@ class AttributedGenerator:
 
         :return: (nx.Graph): Attributed graph of networkx type
         """
-        partition = community_louvain.best_partition(graph, random_state=28)
+        partition = community_louvain.best_partition(graph.graph, random_state=28)
         len_of_every_partition = {}
         for i in partition:
             if partition[i] not in len_of_every_partition:
