@@ -52,15 +52,14 @@ def run_example_tuning(args: Dict[AnyStr, Any]) -> None:
         G = pickle.load(f)
 
     ad = np.mean(list(dict(G.degree()).values()))
-    print("clustering coefficient", np.mean(list(nx.clustering(G).values())))
+    print("clustering coefficient desired", np.mean(list(nx.clustering(G).values())))
     print("average degree", ad)
-
 
 if __name__ == "__main__":
     args = dict()
     args["label_assort"] = [0.9]
     args["feature_assort"] = [0.7]
-    args["cluster"] = [0.1]
+    args["cluster"] = [0.2]
     args["avg_shortest_paths"] = [3]
     args["avg_degree"] = [15]
 

@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 
-def sum(min_d: int, max_d: int) -> float:
+def sum(min_d: int, max_d: int,power: float) -> float:
     """
     Calculate the sum of inverse power for power degree distribution
 
@@ -12,7 +12,7 @@ def sum(min_d: int, max_d: int) -> float:
     :param max_d: (int): Degree value of the node with the maximum degree
     :return: (float): The sum
     """
-    sum = float(np.sum([1 / (pow(i, 2.0)) for i in range(min_d, max_d + 1)]))
+    sum = float(np.sum([1 / (pow(i, power)) for i in range(min_d, max_d + 1)]))
     return sum
 
 
@@ -25,7 +25,7 @@ def pk(min_d: int, max_d: int, power: float) -> Tuple[float]:
     :return: (Tuple[float]): The power degree distribution
     """
     probs = []
-    summation = sum(min_d, max_d)
+    summation = sum(min_d, max_d,power)
     for x in range(min_d, max_d + 1):
         probability = 1 / (pow(x, power) * summation)
         probs.append(probability)

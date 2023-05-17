@@ -12,7 +12,7 @@ import torch
 from matplotlib import pyplot as plt
 
 from core.utils import cos
-
+from torch_geometric.data import Data
 
 class Graph:
     def __init__(self):
@@ -22,6 +22,8 @@ class Graph:
 
     def edges(self):
         return self.graph.edges()
+    def nodes(self, *attr):
+        return self.graph.nodes(*attr)
 
     def add_node(self, node, **attr):
         self.graph.add_node(node, **attr)
@@ -42,6 +44,7 @@ class Graph:
             self.node_attr = []
             for i, attr in self.graph.nodes("attribute"):
                 self.node_attr.append(attr.tolist())
+
             self.labels = []
             for i, lab in self.graph.nodes("label"):
                 self.labels.append(lab)

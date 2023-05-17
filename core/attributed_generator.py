@@ -42,6 +42,8 @@ class AttributedGenerator:
         rand_power_law = rv_discrete(
             min_d, max_d, values=(range(min_d, max_d + 1), pk(min_d, max_d, power))
         )
+
+
         degrees = np.sort(rand_power_law.rvs(size=num_nodes))
         degrees_out = []
         degrees_in = (np.round(degrees * mu)).astype(np.int32)
@@ -178,8 +180,8 @@ class AttributedGenerator:
         """
         Generate graph, main function
 
-        :param params: (dic): Dict of parameters for generator.
-        General parameters:
+         :param params: (dic): Dict of parameters for generator.
+         General parameters:
          max_d: (int): Degree value of the node with the maximum degree
          num_classes: (int): Number of classes/labels in graph
          etta: (float): The hyperparameter for BTER
@@ -200,8 +202,9 @@ class AttributedGenerator:
         :return: ((networkx.Graph, {int: int})): Graph if type networkx.Graph and mapping nodes to labels
         """
         num_nodes = params["num_nodes"]
-        max_d = params["max_d"]
-        min_d = params["min_d"]
+        max_d = int(params["max_d"])
+        min_d = int(params["min_d"])
+
         num_classes = params["num_classes"]
         etta = params["eta"]
         ro = params["rho"]
