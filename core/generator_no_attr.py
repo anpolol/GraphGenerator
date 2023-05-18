@@ -16,9 +16,9 @@ class GeneratorNoAttr(ABC):
     @abstractmethod
     def build_subgraph(self, params: Dict[AnyStr, Any]) -> nx.Graph:
         """
-        Build graph of networkx.Graph type
+        Build graph of core.graph.Graph type
 
         :param params: (Dict): Dict of required parameters for generator
         :return: (networkx.Graph): Generated graph of networkx.Graph type
         """
-        raise NotImplementedError("implement run function")
+        raise NotImplementedError("Did not implement build subgraph function")

@@ -2,13 +2,10 @@ import collections
 from collections import deque
 from typing import Any, AnyStr, Dict, List, Tuple
 
-import igraph as ig
 import networkx as nx
 import numpy as np
-import pandas as pd
 import torch
 from community import community_louvain
-from matplotlib import pyplot as plt
 from scipy.stats import rv_discrete
 
 from core.bter import BTER
@@ -42,7 +39,6 @@ class AttributedGenerator:
         rand_power_law = rv_discrete(
             min_d, max_d, values=(range(min_d, max_d + 1), pk(min_d, max_d, power))
         )
-
 
         degrees = np.sort(rand_power_law.rvs(size=num_nodes))
         degrees_out = []
@@ -221,7 +217,6 @@ class AttributedGenerator:
         degrees, degrees_in, degrees_out = self.making_degree_dist(
             min_d, max_d, num_nodes, mu, power
         )
-
         if class_distr is not None:
             labels_degrees, mapping, clusters = self.making_clusters_with_sizes(
                 num_classes, degrees_in, class_distr
@@ -266,14 +261,14 @@ class AttributedGenerator:
         return graph, clusters
 
     def bter_model_edges(
-        self, degrees: List[int], etta: float, ro: float, d_manual: float, betta: float
+        self, degrees: List[int], eta: float, rho: float, d_manual: float, betta: float
     ) -> Tuple[nx.Graph, Dict[int, int]]:
         """
         Add edges to nodes with degrees
 
         :param degrees: ([int]): Degrees of nodes
-        :param etta: (float): The hyperparameter for BTER model
-        :param ro: (float): The hyperparameter for BTER model
+        :param eta: (float): The hyperparameter for BTER model
+        :param rho: (float): The hyperparameter for BTER model
         :param d_manual: (float): The hyperparameter of BTER model (default: 0.75)
         :param betta: (float): The hyperparameter of BTER model (default: 0.1)
         :return: ((networkx.Graph, {int: int})): Graph with added edges and mapping of indices into degreees
@@ -289,8 +284,8 @@ class AttributedGenerator:
                 degrees_new.append(deg)
         params_for_noattr_generator = dict()
         params_for_noattr_generator["degrees"] = degrees_new
-        params_for_noattr_generator["eta"] = etta
-        params_for_noattr_generator["rho"] = ro
+        params_for_noattr_generator["eta"] = eta
+        params_for_noattr_generator["rho"] = rho
         params_for_noattr_generator["d_manual"] = d_manual
 
         params_for_noattr_generator["betta"] = betta

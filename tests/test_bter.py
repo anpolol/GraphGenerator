@@ -23,14 +23,14 @@ def test_bter_degrees():
     degrees = np.sort(rand_power_law.rvs(size=num_nodes))
     params = dict()
     params["degrees"] = degrees
-    params["etta"] = 0.5
-    params["ro"] = 1
+    params["eta"] = 0.5
+    params["rho"] = 1
     params["d_manual"] = 0.75
     params["betta"] = 0.1
 
-    model = BTER(params)
-    G_model = model.build_graph()
-    degrees_built = dict(G_model.degree()).values()
-    assert G_model.number_of_nodes() == 1000
+    model = BTER()
+    G_model = model.build_subgraph(params)
+    degrees_built = dict(G_model.graph.degree()).values()
+    assert G_model.graph.number_of_nodes() == 1000
     assert min(degrees_built) == min_d
-    assert (nx.number_connected_components(G_model)) == 1
+    assert (nx.number_connected_components(G_model.graph)) == 1

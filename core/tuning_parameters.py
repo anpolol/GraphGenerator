@@ -1,6 +1,5 @@
 import copy
 import os
-import pickle
 from typing import Any, Dict, List
 
 import numpy as np
@@ -70,7 +69,7 @@ class TuneParameters:
     def chars_to_array(self, chars: Dict[str, float]) -> ArrayLike:
         """
         Convert dict to array for certain characteristics:  "Label Assort", "Feature Assort", "Cluster",
-        "Avg shortest path", "Avg Degree", "Connected components"
+        "Avg length of shortest path", "Avg Degree", "Connected components"
 
         :param chars (Dict[str, float]): Dict of required graph characteristics
         :return: (Array): Array of charactristics
@@ -133,8 +132,10 @@ class TuneParameters:
         """
 
         model = Model()
-        args['num_nodes'] = 1000 #как задать дефолтные значения если я передаю именно дикт? чтоб эту строчку и 6 ниже не прописывать
-        args["sigma_every"]=1
+        args[
+            "num_nodes"
+        ] = 1000  # как задать дефолтные значения если я передаю именно дикт? чтоб эту строчку и 6 ниже не прописывать
+        args["sigma_every"] = 1
         args["dim"] = 32
         args["sizes"] = None
         args["manual"] = False
@@ -157,7 +158,7 @@ class TuneParameters:
                     to_append = list(out_pars)
                     row_series = pd.Series(to_append, index=self.df_bench.columns)
                     self.df_bench = self.df_bench.append(row_series, ignore_index=True)
-                    G.save("../dataset/graph_",str(name))
+                    G.save("../dataset/graph_", str(name))
                     nums_to_del.append(num)
 
         for index in sorted(nums_to_del, reverse=True):
@@ -188,4 +189,3 @@ class TuneParameters:
                 max_evals=self.max_eval,
                 early_stop_fn=self.early_stop,
             )
-

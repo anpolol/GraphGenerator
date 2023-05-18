@@ -62,7 +62,6 @@ class BTER(GeneratorNoAttr):
         excesses = np.zeros(ones)
 
         excesses[int(np.round(ones * d_manual) + 1) :] = min_deg * 0.1
-
         if len(degrees_except_min) != 0:
             communities, mapping = self._making_communities(degrees_except_min, ones)
         excesses, graph = self._excesses(

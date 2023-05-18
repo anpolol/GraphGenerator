@@ -1,8 +1,6 @@
-# from torch_geometric.data import Data
 import collections
-import os
 import pickle
-from typing import Any, AnyStr, Dict, Union
+from typing import Any, AnyStr, Dict, List, Tuple, Union
 
 import igraph as ig
 import networkx as nx
@@ -10,34 +8,72 @@ import numpy as np
 import pandas as pd
 import torch
 from matplotlib import pyplot as plt
-
-from core.utils import cos
+from networkx.classes.reportviews import EdgeView, NodeView
 from torch_geometric.data import Data
 
+from core.utils import cos
+
+
 class Graph:
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Class for storing generated graph and for all manipulations with this graph
+        """
         self.graph = nx.Graph()
         self.dict_of_parameters = dict()
         super(Graph, self).__init__()
 
-    def edges(self):
+    def edges(self) -> EdgeView:
+        """
+        Return an EdgeView of networkx class for generated Graph's edges
+        :return: (EdgeView): Edges of the graph
+        """
         return self.graph.edges()
-    def nodes(self, *attr):
+
+    def nodes(self, *attr) -> NodeView:
+        """
+        Return an NodeView of networkx class for generated Graph's nodes
+        :return: (NodeView): Nodes of the graph
+        """
         return self.graph.nodes(*attr)
 
-    def add_node(self, node, **attr):
+    def add_node(self, node: int, **attr: AnyStr) -> None:
+        """
+        Add one node to the graph with attribute
+
+        :param node: (str): added node
+        :param attr: (str): name and value of the attribute
+        """
         self.graph.add_node(node, **attr)
 
-    def add_edge(self, v1, v2):
+    def add_edge(self, v1: int, v2: int) -> None:
+        """
+        Add one edge (v1,v2) to the Graph
+        :param v1: (int): first node of the edge
+        :param v2: (int): second node of the edge
+        """
         self.graph.add_edge(v1, v2)
 
-    def add_nodes_from(self, node_list):
+    def add_nodes_from(self, node_list: List) -> None:
+        """
+        Add multiple nodes.
+
+        :param node_list: ([int]): List of nodes to add to the Graph.
+        """
         self.graph.add_nodes_from(node_list)
 
-    def add_edges_from(self, edges_list):
+    def add_edges_from(self, edges_list: List[Tuple]) -> None:
+        """
+        Add all the edges in ebunch_to_add.
+
+        :param edges_list: ([(int,int)]): List of edges to add to the Graph
+        """
         self.graph.add_edges_from(edges_list)
 
-    def attr_labels_edges_count(self):
+    def attr_labels_edges_count(self) -> None:
+        """
+        Put node attributes, labes and edges in separate class' attributes
+        """
         try:
             self.graph.number_of_nodes() == len(self.labels)
         except:
@@ -50,7 +86,13 @@ class Graph:
                 self.labels.append(lab)
             self.edges = self.graph.edges()
 
-    def save(self, path, name: str):
+    def save(self, path: str, name: str) -> None:
+        """
+        Save generated graph to disk
+
+        :param path: (str): Path for saving generated graph
+        :param name: (str): Name of the file with graph
+        """
         self.attr_labels_edges_count()
         labels = np.array(self.labels)
         np.save(
@@ -65,7 +107,12 @@ class Graph:
         with open("../dataset/graph_" + str(name) + ".pickle", "wb") as f:
             pickle.dump(self.graph, f)
 
-    def to_torch(self):
+    def to_torch(self) -> Data:
+        """
+        Transform generated graph to torch_geometric object Data
+
+        :return: (Data): Data object from torch_geometric library containing generated graph
+        """
         self.attr_labels_edges_count()
         print(
             "x",
@@ -82,9 +129,11 @@ class Graph:
         )
         return data
 
-    def plot_dist(self, expected_degrees) -> None:
+    def plot_dist(self, expected_degrees: List) -> None:
         """
         Plot expected degree distribution and actual degree
+
+        :param expected_degrees: ([int]): List of expected degrees of nodes
         """
         degrees_new = list(dict(self.graph.degree()).values())
         dic = dict()
@@ -118,12 +167,13 @@ class Graph:
 
     def get_statistics(
         self, generator_params: Dict[AnyStr, Any], output_method: str = "dict"
-    ) -> Dict[Any, Any]:  # TODO
+    ) -> Union[Dict[Any, Any], pd.DataFrame]:
         """
-        Calculate characteritics of the graph
+        Calculate charachteritics of the graph
 
-        :param: (str): The way of output of statistics, either 'dict' or 'pandas'. (default: dict)
-        :return: ({Any: Any}): Dictionary of calculated graph characteristics in view 'name_of_characteristic:
+        :param generator_params: ({Any: Any}): The way of output of statistics, either 'dict' or 'pandas'. (default: dict)
+        :param output_method: (str): Either 'dict' or 'pandas', the desired form of the output statistics
+        :return: (Union[{Any: Any}, pd.DataFrame]): Dictionary of calculated graph characteristics in view 'name_of_characteristic:
         value_of_this_characteristic'
         """
         if len(self.dict_of_parameters) == 0:
@@ -225,11 +275,11 @@ class Graph:
         elif output_method == "pandas":
             return pd.from_dict(self.dict_of_parameters)
 
-    def print_statistics(self, generator_params) -> None:
+    def print_statistics(self, generator_params: Dict[AnyStr, Any]) -> None:
         """
         Print characteristics of the built Graph
 
-        :param dict_of_parameters: ({Any: Any}): Parameters to add
+        :param generator_params: ({Any: Any}): Parameters to print
         """
         dict_of_parameters = self.get_statistics(
             generator_params=generator_params, output_method="dict"

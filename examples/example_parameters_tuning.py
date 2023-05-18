@@ -55,6 +55,7 @@ def run_example_tuning(args: Dict[AnyStr, Any]) -> None:
     print("clustering coefficient desired", np.mean(list(nx.clustering(G).values())))
     print("average degree", ad)
 
+
 if __name__ == "__main__":
     args = dict()
     args["label_assort"] = [0.9]
