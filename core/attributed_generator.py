@@ -34,7 +34,8 @@ class AttributedGenerator:
         :param num_nodes: (int): Number of nodes in the required graph
         :param mu: (float): required label assortativity
         :param power: (float): power of degree distribution
-        :return: (([int],[int],[int])): Lists of degree of nodes, degrees of nodes inside their respective classes and degrees outside their own class
+        :return: (([int],[int],[int])): Lists of degree of nodes, degrees of nodes inside their respective classes and
+        degrees outside their own class
         """
         rand_power_law = rv_discrete(
             min_d, max_d, values=(range(min_d, max_d + 1), pk(min_d, max_d, power))
@@ -57,8 +58,8 @@ class AttributedGenerator:
                     if deg == i:
                         ones += 1
                 prob = torch.bernoulli(torch.ones(ones) * mu).numpy()
-                degrees_in[k : k + ones] = prob * i
-                degrees_out[k : k + ones] = (np.ones(ones) - prob) * i
+                degrees_in[k: k + ones] = prob * i
+                degrees_out[k: k + ones] = (np.ones(ones) - prob) * i
                 k = k + ones
 
         return degrees, degrees_in, degrees_out
@@ -186,9 +187,11 @@ class AttributedGenerator:
          dim: (float): Dimension of attribute vector
          power: (float): The power of the degree distribution (default: 2)
          sizes: ([int]): Sizes of classes, if None, the size will be approximately the same (default: None)
-         manual: (bool): Flag identifying the way of connecting edges between classes -- mannually or using GeneratorNoAttr
+         manual: (bool): Flag identifying the way of connecting edges between classes -- mannually or using
+          GeneratorNoAttr
          min_d: (int): Degree value of the node with the minimum degree
-         sigma_init: (float): Variance of the normal distribution from which the attribute vectors of each class are taken separately
+         sigma_init: (float): Variance of the normal distribution from which the attribute vectors of each class are
+         taken separately
          sigma_every: (float): Variance of noise added to the vector of attributes pf each class for every node
 
         and attributes for GeneratorNoAttr
@@ -231,7 +234,7 @@ class AttributedGenerator:
             graph.add_node(j, label=clusters[j])
 
         # first collect edges with other classes
-        if manual == True:
+        if manual is True:
             G_out = self.manual_out_degree(degrees_out, clusters)
             graph.add_edges_from(G_out.edges())
         else:
@@ -343,7 +346,8 @@ class AttributedGenerator:
         Add attributes to nodes in the Graph
 
         :param graph: (nx.Graph): input graph to hang attributes on it
-        :param sigma_init: (float): Variance of the normal distribution from which the attribute vectors of each class are taken separately
+        :param sigma_init: (float): Variance of the normal distribution from which the attribute vectors of each class
+        are taken separately
         :param sigma_every: (float): Variance of noise added to the vector of attributes pf each class for every node
         :param m: Dimension of attributes
 

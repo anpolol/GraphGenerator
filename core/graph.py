@@ -171,9 +171,11 @@ class Graph:
         """
         Calculate charachteritics of the graph
 
-        :param generator_params: ({Any: Any}): The way of output of statistics, either 'dict' or 'pandas'. (default: dict)
+        :param generator_params: ({Any: Any}): The way of output of statistics, either 'dict' or 'pandas'.
+        (default: dict)
         :param output_method: (str): Either 'dict' or 'pandas', the desired form of the output statistics
-        :return: (Union[{Any: Any}, pd.DataFrame]): Dictionary of calculated graph characteristics in view 'name_of_characteristic:
+        :return: (Union[{Any: Any}, pd.DataFrame]): Dictionary of calculated graph characteristics in view
+        'name_of_characteristic:
         value_of_this_characteristic'
         """
         if len(self.dict_of_parameters) == 0:
