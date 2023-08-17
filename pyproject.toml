@@ -1,2 +1,4 @@
 [tool.black]
 line-length = 88
+
+docstring_style = "sphinx"
