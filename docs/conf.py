@@ -27,7 +27,6 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "tests", "tutorials"]
 autodoc_mock_imports = [
     "torch",
     "torch_geometric",
-    "bamt",
     "optuna",
     "pgmpy",
     "sklearn",
@@ -40,5 +39,5 @@ autodoc_mock_imports = [
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 html_static_path = ["_static"]
-html_theme = "sphinx_rtd_theme"
+#html_theme = "sphinx_rtd_theme"
 html_theme_options = {"collapse_navigation": False, "titles_only": True}
