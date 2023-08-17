@@ -18,7 +18,7 @@ author = "NCCR Team (ITMO University)"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["sphinx_rtd_theme","python_docs_theme", "sphinx.ext.autodoc", "sphinxcontrib.katex", "sphinx_mdinclude"]
+extensions = ["sphinx_rtd_theme", "sphinx.ext.autodoc", "sphinxcontrib.katex", "sphinx_mdinclude"]
 
 add_module_names = False
 add_package_names = False
