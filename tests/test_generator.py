@@ -1,5 +1,6 @@
-from core.generator import Main as Model
 import numpy as np
+
+from core.attributed_generator import AttributedGenerator as Model
 
 np.random.seed(30)
 
@@ -15,33 +16,29 @@ def test_graph_generator_statistics():
     eta = 0.2
     rho = 0.6
 
-    model = Model(
-        num_nodes=1000,
-        max_d=max_degree,
-        num_classes=num_classes,
-        etta=eta,
-        ro=rho,
-        mu=mu,
-        sigma_init=sigma_init,
-        sigma_every=1,
-        dim=dimension,
-        power=tau1,
-        min_d=min_degree,
-    )
+    model = Model()
+    params = {}
+    params["num_nodes"] = 1000
+    params["max_d"] = max_degree
+    params["eta"] = eta
+    params["rho"] = rho
+    params["mu"] = mu
+    params["sigma_init"] = sigma_init
+    params["sigma_every"] = 1
+    params["dim"] = dimension
+    params["power"] = tau1
+    params["min_d"] = min_degree
+    params["num_classes"] = num_classes
+    params["sizes"] = None
+    params["manual"] = False
+    params["d_manual"] = 0.75
+    params["betta"] = 0.1
 
-    G, _ = model.making_graph()
-    assert model.statistics()["Number of nodes"] == 1000
-    assert model.statistics()["Avg shortest path"] < 3.8
-    assert (
-        model.statistics()["Avg Degree"] < 4.6
-        and model.statistics()["Avg Degree"] > 3.3
-    )
-    assert model.statistics()["Cluster"] < 0.2
-    assert (
-        model.statistics()["Label Assort"] < 0.7
-        and model.statistics()["Label Assort"] > 0.5
-    )
-    assert (
-        model.statistics()["Feature Assort"] < 0.55
-        and model.statistics()["Feature Assort"] > 0.25
-    )
+    G, _ = model.generate(params)
+    stats = G.get_statistics(params)
+    assert stats["Number of nodes"] == 1000
+    assert stats["Avg shortest path"] < 3.8
+    assert stats["Avg Degree"] < 4.6 and stats["Avg Degree"] > 3.3
+    assert stats["Cluster"] < 0.2
+    assert stats["Label Assort"] < 0.7 and stats["Label Assort"] > 0.5
+    assert stats["Feature Assort"] < 0.55 and stats["Feature Assort"] > 0.25

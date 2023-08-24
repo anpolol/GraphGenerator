@@ -1,6 +1,5 @@
 import copy
 import os
-import pickle
 from typing import Any, Dict, List
 
 import numpy as np
@@ -8,7 +7,7 @@ import pandas as pd
 from hyperopt import STATUS_OK, Trials, atpe, fmin, hp, tpe
 from numpy.typing import ArrayLike
 
-from core.generator import Main as Model
+from core.attributed_generator import AttributedGenerator as Model
 
 
 class TuneParameters:
@@ -29,8 +28,8 @@ class TuneParameters:
             "power": hp.uniform("power", 2, 3),
             "max_d": hp.quniform("max_d", 300, 1000, 100),
             "num_classes": hp.quniform("num_classes", 5, 20, 5),
-            "etta": hp.uniform("etta", 0, 5),
-            "ro": hp.uniform("ro", 0, 1),
+            "eta": hp.uniform("eta", 0, 5),
+            "rho": hp.uniform("rho", 0, 1),
             "mu": hp.uniform("mu", 0.1, 0.95),
             "min_d": hp.quniform("min_d", 1, 10, 1),
         }
@@ -70,7 +69,7 @@ class TuneParameters:
     def chars_to_array(self, chars: Dict[str, float]) -> ArrayLike:
         """
         Convert dict to array for certain characteristics:  "Label Assort", "Feature Assort", "Cluster",
-        "Avg shortest path", "Avg Degree", "Connected components"
+        "Avg length of shortest path", "Avg Degree", "Connected components"
 
         :param chars (Dict[str, float]): Dict of required graph characteristics
         :return: (Array): Array of charactristics
@@ -100,6 +99,7 @@ class TuneParameters:
         :param: target (List): Required graph characteristics
         :return: (float): Loss function value
         """
+
         weight = np.ones(self.num_par_out)
         weight[-1] = 0.3
         return (abs(((pred - target) / target)) * weight).sum()
@@ -130,23 +130,21 @@ class TuneParameters:
         :param args (Dict[str, Any]): Dict of input parameters of generator which should be considered in current trial
         :return (Dict[str, Any]): Dict of required graph characteristics and loss value for current trial
         """
-        model = Model(
-            num_nodes=1000,
-            max_d=int(args["max_d"]),
-            num_classes=int(args["num_classes"]),
-            etta=args["etta"],
-            ro=args["ro"],
-            mu=args["mu"],
-            sigma_init=args["sigma_init"],
-            sigma_every=1,
-            dim=128,
-            power=args["power"],
-            min_d=int(args["min_d"]),
-        )
 
-        G, _ = model.making_graph()
+        model = Model()
+        args[
+            "num_nodes"
+        ] = 1000  # как задать дефолтные значения если я передаю именно дикт? чтоб эту строчку и 6 ниже не прописывать
+        args["sigma_every"] = 1
+        args["dim"] = 32
+        args["sizes"] = None
+        args["manual"] = False
+        args["d_manual"] = 0.75
+        args["betta"] = 0.1
 
-        stats = model.statistics()
+        G, _ = model.generate(args)
+
+        stats = G.get_statistics(args)
         out_pars = self.chars_to_array(stats)
         loss = self.loss_func(out_pars, self.targets)
         nums_to_del = []
@@ -160,26 +158,7 @@ class TuneParameters:
                     to_append = list(out_pars)
                     row_series = pd.Series(to_append, index=self.df_bench.columns)
                     self.df_bench = self.df_bench.append(row_series, ignore_index=True)
-
-                    node_attr = []
-                    for i, attr in G.nodes("attribute"):
-                        node_attr.append(attr.tolist())
-                    labels = []
-                    for i, lab in G.nodes("label"):
-                        labels.append(lab)
-                    labels = np.array(labels)
-
-                    np.save(
-                        "../dataset/graph_" + str(name) + "_edgelist.npy",
-                        np.array(G.edges()),
-                    )
-                    np.save(
-                        "../dataset/graph_" + str(name) + "_attr.npy",
-                        node_attr,
-                    )
-                    with open("../dataset/graph_" + str(name) + ".pickle", "wb") as f:
-                        pickle.dump(G, f)
-                    np.save("../dataset/graph_" + str(name) + "_labels.npy", labels)
+                    G.save("../dataset/graph_", str(name))
                     nums_to_del.append(num)
 
         for index in sorted(nums_to_del, reverse=True):

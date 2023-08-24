@@ -1,0 +1,24 @@
+from abc import ABC, abstractmethod
+from typing import Any, AnyStr, Dict
+
+import networkx as nx
+
+
+class GeneratorNoAttr(ABC):
+    def __init__(
+        self,
+    ) -> None:
+        """
+        The abstract generator of graph
+        """
+        super().__init__()
+
+    @abstractmethod
+    def build_subgraph(self, params: Dict[AnyStr, Any]) -> nx.Graph:
+        """
+        Build graph of core.graph.Graph type
+
+        :param params: (Dict): Dict of required parameters for generator
+        :return: (networkx.Graph): Generated graph of networkx.Graph type
+        """
+        raise NotImplementedError("Did not implement build subgraph function")
