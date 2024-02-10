@@ -17,7 +17,10 @@ def run_example_tuning(args: Dict[AnyStr, Any]) -> None:
     :param args: dict[str, any]: Dict of required graph characteristics of generated graph: label and feature
      assortativity, clustering coefficient, average degree and average length of shortest paths
     """
-    label_assort = args["label_assort"]
+    try:
+        label_assort = args["label_assort"]
+    except:
+        label_assort = [None]
     feature_assort = args["feature_assort"]
     cluster = args["cluster"]
     avg_shortest_paths = args["avg_shortest_paths"]
@@ -29,24 +32,14 @@ def run_example_tuning(args: Dict[AnyStr, Any]) -> None:
             label_assort, feature_assort, cluster, avg_shortest_paths, avg_degree, [1]
         )
     ]
+    print(target_parameters)
+
 
     main = TuneParameters(number_of_trials=500, characteristics_check=target_parameters)
     main.run()
 
-    name = "".join(
-        list(
-            map(
-                lambda x: str(x),
-                [
-                    label_assort[0],
-                    feature_assort[0],
-                    cluster[0],
-                    avg_shortest_paths[0],
-                    avg_degree[0],
-                ],
-            )
-        )
-    )
+    #посмотрим на пример сгенерированного графа, пусть это будет первый из списка
+    name = "".join(map(str, ([label_assort[0]] if label_assort[0] is not None else []) + [feature_assort[0], cluster[0], avg_shortest_paths[0], avg_degree[0]]))
 
     with open("../dataset/graph_" + str(name) + ".pickle", "rb") as f:
         G = pickle.load(f)
@@ -58,10 +51,10 @@ def run_example_tuning(args: Dict[AnyStr, Any]) -> None:
 
 if __name__ == "__main__":
     args = dict()
-    args["label_assort"] = [0.9]
-    args["feature_assort"] = [0.7]
+    #args["label_assort"] = [0.1]
+    args["feature_assort"] = [0.3]
     args["cluster"] = [0.1]
     args["avg_shortest_paths"] = [3]
-    args["avg_degree"] = [15]
+    args["avg_degree"] = [5]
 
     run_example_tuning(args)

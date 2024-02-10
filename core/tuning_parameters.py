@@ -26,38 +26,34 @@ class TuneParameters:
         # Setting up hyperparameters space
         self.hp_space = {
             "sigma_init": hp.uniform("sigma_init", 0.8, 1.1),
-            "power": hp.uniform("power", 2, 3),
+            "power": hp.uniform("power", 2, 2.5),
             "max_d": hp.quniform("max_d", 300, 1000, 100),
-            "num_classes": hp.quniform("num_classes", 5, 20, 5),
+            "num_classes": hp.quniform("num_classes", 5, 10, 5),
             "etta": hp.uniform("etta", 0, 5),
             "ro": hp.uniform("ro", 0, 1),
             "mu": hp.uniform("mu", 0.1, 0.95),
             "min_d": hp.quniform("min_d", 1, 10, 1),
         }
-        self.OUT_PAR_NAMES = [
-            "Label Assort",
-            "Feature Assort",
-            "Cluster",
-            "Avg shortest path",
-            "Avg Degree",
-            "Connected components",
-        ]
+
         self.number_of_trials = number_of_trials
         self.characteristics = characteristics_check
         self.characteristics_check = copy.deepcopy(characteristics_check)
-        self.num_par_out = len(self.OUT_PAR_NAMES)
-        self.trials = Trials()
-        self.max_eval = 0
+
         self.limits = {
-            "Label Assort": 0.3,
             "Feature Assort": 0.3,
             "Cluster": 0.05,
             "Avg shortest path": 0.3,
             "Avg Degree": 1.5,
             "Connected components": 10,
         }
+
         self.df_bench = pd.DataFrame(
             columns=[
+                "Des Label assort",
+                "Des Feature assort",
+                "Des Cluster",
+                "Des Avg shortest path",
+                "Des Degree",
                 "Label assort",
                 "Feature assort",
                 "Cluster",
@@ -66,6 +62,27 @@ class TuneParameters:
                 "Connected components",
             ]
         )
+
+        if self.characteristics[0][0] is not None:
+            self.OUT_PAR_NAMES = ["Label Assort"]
+            self.limits["Label Assort"] = 0.3
+        elif self.characteristics[0][0] is None:
+            self.OUT_PAR_NAMES = []
+            self.df_bench = self.df_bench.drop(columns=["Label assort"])
+            self.df_bench = self.df_bench.drop(columns=["Des Label assort"])
+
+        self.OUT_PAR_NAMES += ["Feature Assort",
+                "Cluster",
+                "Avg shortest path",
+                "Avg Degree",
+                "Connected components"]
+
+        print(self.OUT_PAR_NAMES)
+        self.num_par_out = len(self.OUT_PAR_NAMES)
+        self.trials = Trials()
+        self.max_eval = 0
+
+
 
     def chars_to_array(self, chars: Dict[str, float]) -> ArrayLike:
         """
@@ -112,8 +129,8 @@ class TuneParameters:
         :return: (bool, List): True if stop is required, else False and empty list
         """
         out_pars = self.chars_to_array(trials.trials[-1]["result"])
-
         for num, targets_check in enumerate(self.characteristics):
+            targets_check = targets_check[1:] if targets_check[0] is None else targets_check[::-1]
             diff = np.abs((out_pars - targets_check))
             name = "".join(list(map(lambda x: str(x), self.targets[:-1])))
             if np.all(diff < self.chars_to_array(self.limits)) or os.path.exists(
@@ -131,7 +148,7 @@ class TuneParameters:
         :return (Dict[str, Any]): Dict of required graph characteristics and loss value for current trial
         """
         model = Model(
-            num_nodes=1000,
+            num_nodes=500,
             max_d=int(args["max_d"]),
             num_classes=int(args["num_classes"]),
             etta=args["etta"],
@@ -151,16 +168,18 @@ class TuneParameters:
         loss = self.loss_func(out_pars, self.targets)
         nums_to_del = []
         for num, targets_check in enumerate(self.characteristics_check):
+            targets_check = targets_check[1:] if targets_check[0] is None else targets_check[::-1]
             name = "".join(list(map(lambda x: str(x), targets_check[:-1])))
             if os.path.exists("../dataset/graph_" + str(name) + ".pickle"):
                 nums_to_del.append(num)
             else:
                 diff = np.abs((out_pars - targets_check))
                 if np.all(diff < self.chars_to_array(self.limits)):
-                    to_append = list(out_pars)
+
+                    to_append = list(self.targets[:len(self.targets)-1]) + list(out_pars)
                     row_series = pd.Series(to_append, index=self.df_bench.columns)
                     self.df_bench = self.df_bench.append(row_series, ignore_index=True)
-
+                    self.df_bench.to_csv('../dataset/bench_statistics.csv')
                     node_attr = []
                     for i, attr in G.nodes("attribute"):
                         node_attr.append(attr.tolist())
@@ -194,12 +213,11 @@ class TuneParameters:
         Run this class optimizing parameters for graph characteristics
         """
         for targets in self.characteristics:
-            self.targets = targets
-
+            self.targets = targets[1:] if targets[0] is None else targets[::-1]
             for tr in self.trials.trials:
                 par = self.chars_to_array(tr["result"])
                 if par is not None:
-                    tr["result"]["loss"] = self.loss_func(par, targets)
+                    tr["result"]["loss"] = self.loss_func(par, self.targets)
 
             self.max_eval = len(self.trials.trials) + self.number_of_trials
             best = fmin(

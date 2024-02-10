@@ -78,7 +78,7 @@ class Main:
         :param max_d: (int): Degree value of the node with the maximum degree
         :return: (float): The sum
         """
-        sum = float(np.sum([1 / (pow(i, 2.0)) for i in range(min_d, max_d + 1)]))
+        sum = float(np.sum([1 / (pow(i, self.power)) for i in range(min_d, max_d + 1)]))
         return sum
 
     def pk(self, min_d: int, max_d: int) -> Tuple[float]:

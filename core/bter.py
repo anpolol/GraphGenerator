@@ -59,7 +59,6 @@ class BTER:
                 degrees_except_min.append(deg)
             elif deg == min_deg:
                 ones += 1
-
         excesses = np.zeros(ones)
         excesses[int(np.round(ones * self.d_manual) + 1) :] = min_deg * 0.1
         if len(degrees_except_min) != 0:
