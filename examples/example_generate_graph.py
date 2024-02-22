@@ -5,6 +5,7 @@ import numpy as np
 
 
 def run_example_generate_graph(args: Dict[AnyStr, Any]) -> None:
+    np.random.seed(30)
     """
     To generate graph without tuning (this would be faster), we should first set up input parameters, then call Model
     :param args: dict[str, any]: Dict of input parameters for generator: min degree, mac dgree, mu, power for power
@@ -40,7 +41,7 @@ def run_example_generate_graph(args: Dict[AnyStr, Any]) -> None:
 
 
 if __name__ == "__main__":
-    np.random.seed(30)
+    
     args = dict()
     args["number_of_nodes"] = 1000
     args["min_degree"] = 1

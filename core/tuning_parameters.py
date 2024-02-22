@@ -77,7 +77,7 @@ class TuneParameters:
                 "Avg Degree",
                 "Connected components"]
 
-        print(self.OUT_PAR_NAMES)
+        # print(self.OUT_PAR_NAMES)
         self.num_par_out = len(self.OUT_PAR_NAMES)
         self.trials = Trials()
         self.max_eval = 0
@@ -227,4 +227,5 @@ class TuneParameters:
                 algo=atpe.suggest,
                 max_evals=self.max_eval,
                 early_stop_fn=self.early_stop,
+                verbose=0,
             )
