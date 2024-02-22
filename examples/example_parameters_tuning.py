@@ -4,8 +4,12 @@ from typing import Any, AnyStr, Dict
 
 import networkx as nx
 import numpy as np
-
+import sys 
+sys.path.append(".")
 from core.tuning_parameters import TuneParameters
+from mpire import WorkerPool
+from warnings import filterwarnings
+filterwarnings("ignore")
 
 
 def run_example_tuning(args: Dict[AnyStr, Any]) -> None:
@@ -32,29 +36,47 @@ def run_example_tuning(args: Dict[AnyStr, Any]) -> None:
             label_assort, feature_assort, cluster, avg_shortest_paths, avg_degree, [1]
         )
     ]
-    print(target_parameters)
-
+    # print(target_parameters)
 
     main = TuneParameters(number_of_trials=500, characteristics_check=target_parameters)
     main.run()
 
     #посмотрим на пример сгенерированного графа, пусть это будет первый из списка
-    name = "".join(map(str, ([label_assort[0]] if label_assort[0] is not None else []) + [feature_assort[0], cluster[0], avg_shortest_paths[0], avg_degree[0]]))
+    #name = "".join(map(str, ([label_assort[0]] if label_assort[0] is not None else []) + [feature_assort[0], cluster[0], avg_shortest_paths[0], avg_degree[0]]))
 
-    with open("../dataset/graph_" + str(name) + ".pickle", "rb") as f:
-        G = pickle.load(f)
+    #with open("../dataset/graph_" + str(name) + ".pickle", "rb") as f:
+    #    G = pickle.load(f)
 
-    ad = np.mean(list(dict(G.degree()).values()))
-    print("clustering coefficient", np.mean(list(nx.clustering(G).values())))
-    print("average degree", ad)
+    #ad = np.mean(list(dict(G.degree()).values()))
+    #print("clustering coefficient", np.mean(list(nx.clustering(G).values())))
+    #print("average degree", ad)
+
 
 
 if __name__ == "__main__":
-    args = dict()
+   
     #args["label_assort"] = [0.1]
-    args["feature_assort"] = [0.3]
-    args["cluster"] = [0.1]
-    args["avg_shortest_paths"] = [3]
-    args["avg_degree"] = [5]
+    feature_assort = [x / 10 for x in range(10)]
+    cluster = [x / 10 for x in range(10)]
+    avg_shortest_paths = [x for x in range(1, 10)]
+    avg_degree = [x for x in range(2, 10)]
 
-    run_example_tuning(args)
+    n_jobs = 10
+
+    tasks = []
+
+    print("generating tasks")
+    for x in feature_assort:
+        args = dict()
+        args["feature_assort"] = [x]
+        for y in cluster:
+            args["cluster"] = [y]
+            for z in avg_shortest_paths:
+                args["avg_shortest_paths"] = [z]
+                for w in avg_degree:
+                    args["avg_degree"] = [w]
+                    tasks.append([args.copy()])
+    
+    with WorkerPool(n_jobs=n_jobs) as pool:
+        pool.map(run_example_tuning, tasks, progress_bar=True)
+   
