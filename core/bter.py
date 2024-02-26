@@ -63,31 +63,36 @@ class BTER:
         excesses[int(np.round(ones * self.d_manual) + 1) :] = min_deg * 0.1
         if len(degrees_except_min) != 0:
             communities, mapping = self._making_communities(degrees_except_min, ones)
-        excesses, graph = self._excesses(communities, mapping, excesses, graph)
+            excesses, graph = self._excesses(communities, mapping, excesses, graph)
 
-        len_excesses = len(excesses)
-        len_negative = 0
-        len_less_min_deg = 0
-        degs = []
-        for deg in excesses:
-            if deg <= 0:
-                len_negative += 1
-            if deg < min_deg + 1:
-                len_less_min_deg += 1
-            if deg > 0:
-                degs.append(deg)
+            len_excesses = len(excesses)
+            len_negative = 0
+            len_less_min_deg = 0
+            degs = []
+            for deg in excesses:
+                if deg <= 0:
+                    len_negative += 1
+                if deg < min_deg + 1:
+                    len_less_min_deg += 1
+                if deg > 0:
+                    degs.append(deg)
 
-        if sum(degs) > 0:
-            graph = self._random_edges(
-                graph, degs, len_negative, len_excesses, len_less_min_deg, min_deg
-            )
-            # fixing excesses considering attached edges
-            excesses = self._fix_excesses(excesses, ones, min_deg)
+            if sum(degs) > 0:
+                graph = self._random_edges(
+                    graph, degs, len_negative, len_excesses, len_less_min_deg, min_deg
+                )
+                # fixing excesses considering attached edges
+                excesses = self._fix_excesses(excesses, ones, min_deg)
 
-        # add remaining edges CL model
-        if sum(excesses) > 0:
-            graph = self._cl_model(graph, excesses, len_negative)
-        return graph
+            # add remaining edges CL model
+            if sum(excesses) > 0:
+                graph = self._cl_model(graph, excesses, len_negative)
+
+            return graph
+        else:
+            p = min_deg/(ones-1)
+            graph = nx.erdos_renyi_graph(ones,p)
+            return graph
 
     def _excesses(self, communities, mapping, excesses, graph):
         dmax = max(self.degrees)
