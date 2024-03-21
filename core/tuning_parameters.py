@@ -12,7 +12,7 @@ from core.generator import Main as Model
 
 
 class TuneParameters:
-    def __init__(self, number_of_trials: int, characteristics_check: List) -> None:
+    def __init__(self, number_of_trials: int, num_nodes: int, characteristics_check: List) -> None:
         """
         Class for tuning input parameters of Generator so that graph characteristics are equal to required
 
@@ -21,8 +21,7 @@ class TuneParameters:
         for one graph, columns are follows: label assortativity, feature assortativity, clustering coefficient, average
         length of shortest paths, average degree
         """
-        super(TuneParameters, self).__init__()
-
+        self.num_nodes = num_nodes
         # Setting up hyperparameters space
         self.hp_space = {
             "sigma_init": hp.uniform("sigma_init", 0.8, 1.1),
@@ -77,7 +76,7 @@ class TuneParameters:
                 "Avg Degree",
                 "Connected components"]
 
-        print(self.OUT_PAR_NAMES)
+        # print(self.OUT_PAR_NAMES)
         self.num_par_out = len(self.OUT_PAR_NAMES)
         self.trials = Trials()
         self.max_eval = 0
@@ -148,7 +147,7 @@ class TuneParameters:
         :return (Dict[str, Any]): Dict of required graph characteristics and loss value for current trial
         """
         model = Model(
-            num_nodes=500,
+            num_nodes=self.num_nodes,
             max_d=int(args["max_d"]),
             num_classes=int(args["num_classes"]),
             etta=args["etta"],
@@ -227,4 +226,5 @@ class TuneParameters:
                 algo=atpe.suggest,
                 max_evals=self.max_eval,
                 early_stop_fn=self.early_stop,
+                verbose=0,
             )
